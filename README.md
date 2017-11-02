@@ -1,4 +1,4 @@
-# GameplayFootball
+# Gameplay Football
 Football game, discontinued
 
 In short, this game has pretty good potential gameplay-wise, but has architectural problems regarding the code. I would advise you *not* to continue development, but rather use the source as inspiration for your own game.
