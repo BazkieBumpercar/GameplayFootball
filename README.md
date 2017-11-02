@@ -14,6 +14,7 @@ Another thing, this game uses my own multithreaded game engine (Blunted2), and n
 I may add some in-depth explanations about various interesting pieces of code in this project later on, in this very readme.
 Enjoy!
 
+## Donate
 I'm poor as heck! Consider a donation to my Bitcoin address 1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t
 
 Thank you :)
