@@ -21,7 +21,7 @@
 
 #include "libs/fastapprox.h"
 
-ElizaController::ElizaController(Match *match) : PlayerController(match) { {
+ElizaController::ElizaController(Match *match) : PlayerController(match) {
   lastDesiredDirection = Vector3(0);
   lastDesiredVelocity = 0;
 }
