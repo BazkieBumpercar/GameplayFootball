@@ -1,0 +1,185 @@
+
+set(LEAGUE_HEADERS
+   src/league/leaguecode.hpp
+)
+
+set(LEAGUE_SOURCES
+   src/league/leaguecode.cpp
+)
+
+set(CORE_HEADERS
+   src/gamedefines.hpp
+   src/utils.hpp
+   src/main.hpp
+   src/gametask.hpp
+   src/dbquery.hpp
+   src/misc/hungarian.h
+)
+
+set(CORE_SOURCES
+   src/misc/perlin.cpp
+   src/misc/hungarian.c
+   src/gametask.cpp
+   src/utils.cpp
+   src/main.cpp
+   src/dbquery.cpp
+   src/gamedefines.cpp
+)
+
+set(GAME_HEADERS
+   src/onthepitch/humangamer.hpp
+   src/onthepitch/officials.hpp
+   src/onthepitch/player/humanoid/humanoidbase.hpp
+   src/onthepitch/player/humanoid/humanoid.hpp
+   src/onthepitch/player/humanoid/animcollection.hpp
+   src/onthepitch/player/humanoid/humanoid_utils.hpp
+   src/onthepitch/player/playerofficial.hpp
+   src/onthepitch/player/playerbase.hpp
+   src/onthepitch/player/player.hpp
+   src/onthepitch/player/controller/icontroller.hpp
+   src/onthepitch/player/controller/elizacontroller.hpp
+   src/onthepitch/player/controller/humancontroller.hpp
+   src/onthepitch/player/controller/playercontroller.hpp
+   src/onthepitch/player/controller/strategies/special/celebration.hpp
+   src/onthepitch/player/controller/strategies/strategy.hpp
+   src/onthepitch/player/controller/strategies/offtheball/default_off.hpp
+   src/onthepitch/player/controller/strategies/offtheball/default_def.hpp
+   src/onthepitch/player/controller/strategies/offtheball/default_mid.hpp
+   src/onthepitch/player/controller/strategies/offtheball/goalie_default.hpp
+   src/onthepitch/player/controller/refereecontroller.hpp
+   src/onthepitch/referee.hpp
+   src/onthepitch/ball.hpp
+   src/onthepitch/team.hpp
+   src/onthepitch/match.hpp
+   src/onthepitch/AIsupport/AIfunctions.hpp
+   src/onthepitch/AIsupport/mentalimage.hpp
+   src/onthepitch/teamAIcontroller.hpp
+   src/onthepitch/proceduralpitch.hpp
+)
+
+set(GAME_SOURCES
+   src/onthepitch/officials.cpp
+   src/onthepitch/player/humanoid/humanoid_utils.cpp
+   src/onthepitch/player/humanoid/animcollection.cpp
+   src/onthepitch/player/humanoid/humanoidbase.cpp
+   src/onthepitch/player/humanoid/humanoid.cpp
+   src/onthepitch/player/playerofficial.cpp
+   src/onthepitch/player/player.cpp
+   src/onthepitch/player/playerbase.cpp
+   src/onthepitch/player/controller/playercontroller.cpp
+   src/onthepitch/player/controller/humancontroller.cpp
+   src/onthepitch/player/controller/icontroller.cpp
+   src/onthepitch/player/controller/refereecontroller.cpp
+   src/onthepitch/player/controller/elizacontroller.cpp
+   src/onthepitch/player/controller/strategies/special/celebration.cpp
+   src/onthepitch/player/controller/strategies/strategy.cpp
+   src/onthepitch/player/controller/strategies/offtheball/default_mid.cpp
+   src/onthepitch/player/controller/strategies/offtheball/default_off.cpp
+   src/onthepitch/player/controller/strategies/offtheball/default_def.cpp
+   src/onthepitch/player/controller/strategies/offtheball/goalie_default.cpp
+   src/onthepitch/humangamer.cpp
+   src/onthepitch/ball.cpp
+   src/onthepitch/match.cpp
+   src/onthepitch/referee.cpp
+   src/onthepitch/AIsupport/mentalimage.cpp
+   src/onthepitch/AIsupport/AIfunctions.cpp
+   src/onthepitch/proceduralpitch.cpp
+   src/onthepitch/team.cpp
+   src/onthepitch/teamAIcontroller.cpp
+)
+
+set(HID_HEADERS
+   src/hid/gamepad.hpp
+   src/hid/ihidevice.hpp
+   src/hid/keyboard.hpp
+)
+
+set(HID_SOURCES
+   src/hid/gamepad.cpp
+   src/hid/keyboard.cpp
+)
+
+set(MENU_HEADERS
+   src/menu/league/league_calendar.hpp
+   src/menu/league/league_standings.hpp
+   src/menu/league/league_team.hpp
+   src/menu/league/league.hpp
+   src/menu/league/league_management.hpp
+   src/menu/league/league_system.hpp
+   src/menu/league/league_inbox.hpp
+   src/menu/league/league_forward.hpp
+   src/menu/gameplan.hpp
+   src/menu/cameramenu.hpp
+   src/menu/pagefactory.hpp
+   src/menu/widgets/gameplansubmenu.hpp
+   src/menu/widgets/planmap.hpp
+   src/menu/startmatch/matchoptions.hpp
+   src/menu/startmatch/loadingmatch.hpp
+   src/menu/startmatch/teamselect.hpp
+   src/menu/menutask.hpp
+   src/menu/settings.hpp
+   src/menu/controllerselect.hpp
+   src/menu/mainmenu.hpp
+   src/menu/menuscene.hpp
+   src/menu/visualoptions.hpp
+   src/menu/credits.hpp
+   src/menu/ingame/phasemenu.hpp
+   src/menu/ingame/replaymenu.hpp
+   src/menu/ingame/tacticsdebug.hpp
+   src/menu/ingame/gamepage.hpp
+   src/menu/ingame/gameover.hpp
+   src/menu/ingame/ingame.hpp
+   src/menu/ingame/playerhud.hpp
+   src/menu/ingame/scoreboard.hpp
+   src/menu/ingame/radar.hpp
+)
+
+set(MENU_SOURCES
+   src/menu/credits.cpp
+   src/menu/league/league_system.cpp
+   src/menu/league/league_team.cpp
+   src/menu/league/league_management.cpp
+   src/menu/league/league.cpp
+   src/menu/league/league_calendar.cpp
+   src/menu/league/league_inbox.cpp
+   src/menu/league/league_forward.cpp
+   src/menu/league/league_standings.cpp
+   src/menu/gameplan.cpp
+   src/menu/widgets/planmap.cpp
+   src/menu/widgets/gameplansubmenu.cpp
+   src/menu/startmatch/teamselect.cpp
+   src/menu/startmatch/loadingmatch.cpp
+   src/menu/startmatch/matchoptions.cpp
+   src/menu/visualoptions.cpp
+   src/menu/pagefactory.cpp
+   src/menu/menutask.cpp
+   src/menu/cameramenu.cpp
+   src/menu/menuscene.cpp
+   src/menu/controllerselect.cpp
+   src/menu/mainmenu.cpp
+   src/menu/ingame/radar.cpp
+   src/menu/ingame/tacticsdebug.cpp
+   src/menu/ingame/gamepage.cpp
+   src/menu/ingame/replaymenu.cpp
+   src/menu/ingame/gameover.cpp
+   src/menu/ingame/phasemenu.cpp
+   src/menu/ingame/ingame.cpp
+   src/menu/ingame/scoreboard.cpp
+   src/menu/ingame/playerhud.cpp
+   src/menu/settings.cpp
+)
+
+set(DATA_HEADERS
+   src/data/matchdata.hpp
+   src/data/teamdata.hpp
+   src/data/playerdata.hpp
+)
+
+set(DATA_SOURCES
+   src/data/matchdata.cpp
+   src/data/playerdata.cpp
+   src/data/teamdata.cpp
+)
+   
+      
+
