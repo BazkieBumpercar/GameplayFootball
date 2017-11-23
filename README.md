@@ -7,7 +7,7 @@ Another thing, this game uses my own multithreaded game engine (Blunted2), and n
 - I don't offer support for this, so enjoy it but leave me alone ;)
 - Project dir .tar.gz including images, models and such is located at http://properlydecent.com/data/gameplayfootball/
 - This game uses my game engine Blunted2, which you can find here https://github.com/BazkieBumpercar/Blunted2
-- Compiling can be a beeyatch, regarding includes/libs and such. I'm always having trouble with that too (as you can see from my messy Makefiles), so you're on your own here, just fiddle around until it works :P
+- Compiling can be a beeyatch, regarding includes/libs and such. I'm always having trouble with that too (as you can see from my messy Makefiles), so you're on your own here, just fiddle around until it works :P *EDIT, thanks to Farrer, there's now a set of CMAKE files to help you with compilation!*
 - You can download the public beta binary from my website @ http://properlydecent.com
 
 
