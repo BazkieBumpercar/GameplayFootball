@@ -1,20 +1,35 @@
-# Gameplay Football
-Football game, discontinued
+[![Build Status](https://travis-ci.org/louis-mclaughlin/libresoccer.svg?branch=master)](https://travis-ci.org/louis-mclaughlin/libresoccer)
 
-In short, this game has pretty good potential gameplay-wise, but has architectural problems regarding the code. I would advise you *not* to continue development, but rather use the source as inspiration for your own game. There's some pretty useful excerpts of code in there that may help you develop your sportsball game!
-Another thing, this game uses my own multithreaded game engine (Blunted2), and no matter how cool that may sound, using a badly tested and undocumented engine just slows down development. Besides, a football game doesn't need to be *that* multithreaded, it just needlessly complicates things.
+A fork of [GameplayFootball](https://github.com/BazkieBumpercar/GameplayFootball)
 
-- I don't offer support for this, so enjoy it but leave me alone ;)
-- Project dir .tar.gz including images, models and such is located at http://properlydecent.com/data/gameplayfootball/
-- This game uses my game engine Blunted2, which you can find here https://github.com/BazkieBumpercar/Blunted2
-- Compiling can be a beeyatch, regarding includes/libs and such. I'm always having trouble with that too (as you can see from my messy Makefiles), so you're on your own here, just fiddle around until it works :P *EDIT, thanks to Farrer, there's now a set of CMAKE files to help you with compilation!*
-- You can download the public beta binary from my website @ http://properlydecent.com
+# Setup
 
+## Linux
 
-I may add some in-depth explanations about various interesting pieces of code in this project later on, in this very readme.
-Enjoy!
+### Ubuntu
+```
+sudo apt install libglu1-mesa-dev libsdl1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev gfx1.2-dev libsdl-ttf2.0-dev libopenal-dev libboost-dev libboost-thread-dev libboost-signals-dev libboost-filesystem-dev
 
-## Donate
-I'm poor as heck! Consider a donation to my Bitcoin address 1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t
+git clone https://github.com/flibitijibibo/libSGE.git
+cd libSGE
+git checkout 1085c4958397b91a42c399bc389e8fddde8f207b
+sudo make install
+sudo ln -s /usr/lib64/libSGE.so.0 /usr/lib/libSGE.so.0
 
-Thank you :)
+cd ..
+git clone https://github.com/BazkieBumpercar/Blunted2.git
+cd Blunted2
+sed -i.bak 's/#define v4sil(x) v2dil((((unsigned long long) (x)) << 32) | (x))/#define v4sil(x) v2dil((((long long) (x)) << 32) | (x))/g' src/libs/fastapprox.h
+cmake .
+sudo make install
+
+cd ..
+git clone https://github.com/louis-mclaughlin/libresoccer.git
+cd libresoccer
+mkdir build
+cd build
+wget https://github.com/louis-mclaughlin/libresoccer/releases/download/original/game.zip && unzip game.zip && rm game.zip
+cmake ..
+make
+./gameplayfootball
+```
