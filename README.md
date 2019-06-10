@@ -15,6 +15,6 @@ I may add some in-depth explanations about various interesting pieces of code in
 Enjoy!
 
 ## Donate
-I'm poor as heck! Consider a donation to my Bitcoin address 1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t
+Consider a donation to my Bitcoin address 1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t
 
 Thank you :)
