@@ -25,6 +25,9 @@ endif(UNIX)
 FIND_PACKAGE(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
+FIND_PACKAGE(GLEW REQUIRED)
+include_directories(${GLEW_INCLUDE_DIRS})
+
 FIND_PACKAGE(SDL REQUIRED)
 include_directories(${SDL_INCLUDE_DIR})
 
@@ -40,7 +43,7 @@ include_directories(${SDL_GFX_DIRS})
 FIND_PACKAGE(SDL_net REQUIRED)
 include_directories(${SDL_NET_INCLUDE_DIRS})
 
-FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread signals filesystem)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread filesystem)
 include_directories(${Boost_INCLUDE_DIR})
 
 FIND_PACKAGE(SGE REQUIRED)
@@ -67,7 +70,7 @@ set(LIBRARIES gamelib hidlib menulib datalib leaguelib
    ${BLUNTED2_LIBRARY} ${Boost_LIBRARIES} 
    ${SDL_IMAGE_LIBRARIES} ${SDL_TTF_LIBRARIES} ${SDL_GFX_LIBRARIES}
    ${SDL_NET_LIBRARIES}
-   ${SDL_LIBRARY} ${OPENAL_LIBRARY} ${SGE_LIBRARY} dl m ${OPENGL_LIBRARIES})
+   ${SDL_LIBRARY} ${OPENAL_LIBRARY} ${SGE_LIBRARY} dl m ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 add_executable(gameplayfootball WIN32 ${CORE_SOURCES} ${CORE_HEADERS})
 target_link_libraries(gameplayfootball ${LIBRARIES})

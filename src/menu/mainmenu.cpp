@@ -914,8 +914,8 @@ bool MainMenuPage::GoImportDB() {
     // now sort first 11 by role (defenders in da back)
     std::vector<PlayerImport>::iterator iter = clubs.at(c).players.begin();
     std::vector<PlayerImport>::iterator iterEnd = clubs.at(c).players.begin();
-    if (keepers.size() > 0) advance(iter, 1); // keep keeper intact
-    advance(iterEnd, std::min(11, int(clubs.at(c).players.size())));
+    if (keepers.size() > 0) std::advance(iter, 1); // keep keeper intact
+    std::advance(iterEnd, std::min(11, int(clubs.at(c).players.size())));
     std::sort(iter, iterEnd, SortClubPlayersByRole);
 
     //printf("KEEPER?: %s\n", clubs.at(c).players.begin()->lastName.c_str());
@@ -937,8 +937,8 @@ bool MainMenuPage::GoImportDB() {
     if (clubs.at(c).players.size() > 11) {
       iter = clubs.at(c).players.begin();
       iterEnd = clubs.at(c).players.begin();
-      advance(iter, 11);
-      advance(iterEnd, keepPlayers);
+      std::advance(iter, 11);
+      std::advance(iterEnd, keepPlayers);
       std::sort(iter, iterEnd, SortClubPlayersByRole);
     }
 

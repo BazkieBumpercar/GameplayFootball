@@ -217,12 +217,12 @@ class Match {
     //void AddMissingAnim(const MissingAnim &someAnim);
 
     // not sure about how signals work in this game at the moment. whole menu/game thing needs a rethink, i guess
-    boost::signal<void(Match*)> sig_OnMatchPhaseChange;
-    boost::signal<void(Match*)> sig_OnShortReplayMoment;
-    boost::signal<void(Match*)> sig_OnExtendedReplayMoment;
-    boost::signal<void(Match*)> sig_OnGameOver;
-    boost::signal<void(Match*)> sig_OnCreatedMatch;
-    boost::signal<void(Match*)> sig_OnExitedMatch;
+    boost::signals2::signal<void(Match*)> sig_OnMatchPhaseChange;
+    boost::signals2::signal<void(Match*)> sig_OnShortReplayMoment;
+    boost::signals2::signal<void(Match*)> sig_OnExtendedReplayMoment;
+    boost::signals2::signal<void(Match*)> sig_OnGameOver;
+    boost::signals2::signal<void(Match*)> sig_OnCreatedMatch;
+    boost::signals2::signal<void(Match*)> sig_OnExitedMatch;
 
   protected:
     void GetReplaySpatials(std::list < boost::intrusive_ptr<Spatial> > &spatials);
