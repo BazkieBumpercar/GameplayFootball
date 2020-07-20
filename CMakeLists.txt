@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(PACKAGE gameplayfootball)
+set(PACKAGE GameplayFootball)
 
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 2)
+set(VERSION_MINOR 3)
 set(VERSION_PATCH 0)
 if(${VERSION_PATCH})
    set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
@@ -13,10 +13,12 @@ endif(${VERSION_PATCH})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
 
-project(gameplayfootball)
+project(GameplayFootball)
 
 if(UNIX)
-   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Wall -Wno-unused-variable")
+   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Wall")
+   # Temporarily suppress warnings during debug
+   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-variable -Wno-sign-compare -Wno-unused-function -Wno-unused-but-set-variable -Wno-strict-aliasing")
    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
 endif(UNIX)
 
@@ -27,26 +29,20 @@ include_directories(${OPENGL_INCLUDE_DIR})
 FIND_PACKAGE(GLEW REQUIRED)
 include_directories(${GLEW_INCLUDE_DIRS})
 
-FIND_PACKAGE(SDL REQUIRED)
-include_directories(${SDL_INCLUDE_DIR})
+FIND_PACKAGE(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIR})
 
-FIND_PACKAGE(SDL_image REQUIRED)
-include_directories(${SDL_IMAGE_DIRS})
+FIND_PACKAGE(SDL2_image REQUIRED)
+include_directories(${SDL2_IMAGE_DIRS})
 
-FIND_PACKAGE(SDL_ttf REQUIRED)
-include_directories(${SDL_TTF_DIRS})
+FIND_PACKAGE(SDL2_ttf REQUIRED)
+include_directories(${SDL2_TTF_DIRS})
 
-FIND_PACKAGE(SDL_gfx REQUIRED)
-include_directories(${SDL_GFX_DIRS})
-
-FIND_PACKAGE(SDL_net REQUIRED)
-include_directories(${SDL_NET_INCLUDE_DIRS})
+FIND_PACKAGE(SDL2_gfx REQUIRED)
+include_directories(${SDL2_GFX_DIRS})
 
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread filesystem)
 include_directories(${Boost_INCLUDE_DIR})
-
-FIND_PACKAGE(SGE REQUIRED)
-include_directories(${SGE_INCLUDE_DIR})
 
 FIND_PACKAGE(OpenAL REQUIRED)
 include_directories(${OPENAL_INCLUDE_DIR})
@@ -100,9 +96,8 @@ add_library(datalib ${DATA_SOURCES} ${DATA_HEADERS})
 
 set(LIBRARIES gamelib hidlib menulib datalib leaguelib blunted2
    ${Boost_LIBRARIES}
-   ${SDL_IMAGE_LIBRARIES} ${SDL_TTF_LIBRARIES} ${SDL_GFX_LIBRARIES}
-   ${SDL_NET_LIBRARIES}
-   ${SDL_LIBRARY} ${OPENAL_LIBRARY} ${SGE_LIBRARY} dl m ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+   ${SDL2_IMAGE_LIBRARIES} ${SDL2_TTF_LIBRARIES} ${SDL2_GFX_LIBRARIES}
+   ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} dl m ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 add_executable(gameplayfootball WIN32 ${CORE_SOURCES} ${CORE_HEADERS})
 target_link_libraries(gameplayfootball ${LIBRARIES})

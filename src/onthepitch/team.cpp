@@ -154,8 +154,8 @@ void Team::SetFormationEntry(int playerID, FormationEntry entry) {
 }
 
 void Team::GetActivePlayers(std::vector<Player*> &activePlayers) {
-  for (int i = 0; i < (signed int)players.size(); i++) {
-    if (players.at(i)->IsActive()) activePlayers.push_back(players.at(i));
+  for (auto player : players) {
+    if (player->IsActive()) activePlayers.push_back(player);
   }
 }
 

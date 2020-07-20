@@ -2,6 +2,7 @@
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
 
+#include <cmath>
 #include "humanoid.hpp"
 
 #include "humanoid_utils.hpp"
@@ -18,8 +19,6 @@
 #include "managers/resourcemanagerpool.hpp"
 
 #include "scene/objectfactory.hpp"
-
-#include "libs/fastapprox.h"
 
 const float bodyRotationSmoothingFactor = 1.0f;
 const float bodyRotationSmoothingMaxAngle = 0.25f * pi;
@@ -2073,9 +2072,14 @@ Vector3 HumanoidBase::CalculatePhysicsVector(Animation *anim, bool useDesiredMov
   bool isBaseAnim = (anim->GetVariable("baseanim").compare("true") == 0);
 
   float difficultyFactor = atof(anim->GetVariable("animdifficultyfactor").c_str());
-  float difficultyPenaltyFactor = pow(clamp((difficultyFactor - 0.0f) * (1.0f - (stat_agility * 0.2f + stat_acceleration * 0.2f)) * 2.0f, 0.0f, 1.0f), 0.7f);
+  float difficultyPenaltyFactor = std::pow(
+      clamp((difficultyFactor - 0.0f) *
+                (1.0f - (stat_agility * 0.2f + stat_acceleration * 0.2f)) *
+                2.0f,
+            0.0f, 1.0f),
+      0.7f);
 
-  float powerFactor = 1.0f - clamp(fastpow(player->GetLastTouchBias(1000), 0.8f) * (0.8f - stat_dribble * 0.3f), 0.0f, 0.4f); // todo: put lasttouchbias thing in loop, so it'll change over time (in that loop)
+  float powerFactor = 1.0f - clamp(std::pow(player->GetLastTouchBias(1000), 0.8f) * (0.8f - stat_dribble * 0.3f), 0.0f, 0.4f); // todo: put lasttouchbias thing in loop, so it'll change over time (in that loop)
   // moved to per ms timeloop penalty
   powerFactor *= 1.0f - clamp(decayingPositionOffset.GetLength() * (10.0f - player->GetStat("physical_balance") * 5.0f) - 0.1f, 0.0f, 0.3f);
 
@@ -2100,7 +2104,7 @@ Vector3 HumanoidBase::CalculatePhysicsVector(Animation *anim, bool useDesiredMov
   radian maxAngleMod_overAnimAngle = 0.125f * pi;
   radian maxAngleMod_straightAnimAngle = 0.125f * pi;
   if (touch) {
-    float bonus = 1.0f - pow(NormalizedClamp((adaptedCurrentMovement + predictedOutgoingMovement).GetLength() * 0.5f, 0, sprintVelocity), 0.8f) * 0.8f;
+    float bonus = 1.0f - std::pow(NormalizedClamp((adaptedCurrentMovement + predictedOutgoingMovement).GetLength() * 0.5f, 0, sprintVelocity), 0.8f) * 0.8f;
     bonus *= 0.6f + 0.4f * player->GetStat("technical_ballcontrol"); // todo: shouldn't this be agility?
     maxAngleMod_underAnimAngle = 0.2f * pi * bonus;
     maxAngleMod_overAnimAngle = 0;
@@ -2182,8 +2186,18 @@ Vector3 HumanoidBase::CalculatePhysicsVector(Animation *anim, bool useDesiredMov
 
     Vector3 animOutgoingMovement = anim->GetOutgoingMovement();
     animOutgoingMovement.Rotate2D(toDesiredAngle_capped);
-    brakeBias *= pow(NormalizedClamp(spatialState.floatVelocity, idleVelocity, sprintVelocity - 0.5f), 0.8f);//0.5f);
-    float maxVelo = sprintVelocity * ((1.0f - brakeBias) + ((1.0f - pow(fabs(animOutgoingMovement.GetNormalized(0).GetAngle2D(Vector3(0, -1, 0)) / pi), 0.5f)) * brakeBias));
+    brakeBias *= std::pow(NormalizedClamp(spatialState.floatVelocity,
+                                          idleVelocity, sprintVelocity - 0.5f),
+                          0.8f);  // 0.5f);
+    float maxVelo =
+        sprintVelocity *
+        ((1.0f - brakeBias) +
+         ((1.0f -
+           std::pow(fabs(animOutgoingMovement.GetNormalized(0).GetAngle2D(
+                             Vector3(0, -1, 0)) /
+                         pi),
+                    0.5f)) *
+          brakeBias));
     maximumOutgoingVelocity = maxVelo;
   }
 
@@ -2293,12 +2307,17 @@ Vector3 HumanoidBase::CalculatePhysicsVector(Animation *anim, bool useDesiredMov
       int numBrakeFrames = 15;
       if (touch && time_ms >= animTouchFrame * 10 && time_ms < (animTouchFrame + numBrakeFrames) * 10) {
         int brakeFramesInto = (time_ms - (animTouchFrame * 10)) / 10;
-        float brakeFrameFactor = pow(1.0f - (brakeFramesInto / (float)numBrakeFrames), 0.5f);
+        float brakeFrameFactor =
+            std::pow(1.0f - (brakeFramesInto / (float)numBrakeFrames), 0.5f);
 
         float touchBrakeFactor = 0.3f;
 
         float touchDifficultyFactor = clamp((difficultyFactor + 0.7f) * (1.0f - stat_dribble * 0.4f), 0.0, 1.0f);
-        touchDifficultyFactor *= 1.0f - pow(fabs(anim->GetOutgoingAngle()) / pi, 0.75f); // don't help with braking (when going nearer 180 deg)
+        touchDifficultyFactor *=
+            1.0f -
+            std::pow(
+                fabs(anim->GetOutgoingAngle()) / pi,
+                0.75f);  // don't help with braking (when going nearer 180 deg)
 
         float veloFactor = NormalizedClamp(temporalMovement.GetLength(), walkVelocity, sprintVelocity);
 
@@ -2328,7 +2347,9 @@ Vector3 HumanoidBase::CalculatePhysicsVector(Animation *anim, bool useDesiredMov
         maxAngleFactor *= (0.7f + 0.3f * stat_agility);
         if (!touch) maxAngleFactor *= 1.5f;
         radian maxAngle = maxAngleFactor * pi;
-        float veloFactor = pow(NormalizedClamp(temporalMovement.GetLength(), 0, sprintVelocity), 1.0f);
+        float veloFactor = std::pow(
+            NormalizedClamp(temporalMovement.GetLength(), 0, sprintVelocity),
+            1.0f);
         maxAngle /= (veloFactor + 0.01f);
 
         if (fabs(angle) > maxAngle) {
@@ -2354,7 +2375,9 @@ Vector3 HumanoidBase::CalculatePhysicsVector(Animation *anim, bool useDesiredMov
       if (animType.compare("sliding") == 0) maxChange = 0.1f;
       // no power first few frames, so transitions are smoother
       //maxChange *= 0.3f + 0.7f * curve(NormalizedClamp(time_ms, 0.0f, 80.0f), 1.0f);
-      float veloFactor = pow(NormalizedClamp(temporalMovement.GetLength(), 0, sprintVelocity), 1.5f);
+      float veloFactor = std::pow(
+          NormalizedClamp(temporalMovement.GetLength(), 0, sprintVelocity),
+          1.5f);
       float firstStepFactor = veloFactor;
       if (animType.compare("movement") == 0) firstStepFactor *= 0.4f;
       maxChange *= (1.0f - firstStepFactor) + firstStepFactor * curve(NormalizedClamp(time_ms, 0.0f, 160.0f), 1.0f);
@@ -2396,7 +2419,12 @@ Vector3 HumanoidBase::CalculatePhysicsVector(Animation *anim, bool useDesiredMov
 
         // wolfram alpha to show difference in sin before/after exp order: 10 * (sin(((1.0 - x ^ 2.0) - 0.5) * pi) * 0.5 + 0.5), 10 * ((1.0 - (sin((x - 0.5) * pi) * 0.5 + 0.5)) ^ 2.0) | from x = 0.0 to 1.0
 
-        float veloAirResistanceFactor = clamp(pow(clamp((temporalMovement.GetLength() - falloffStartVelo) / (player->GetMaxVelocity() - falloffStartVelo), 0.0f, 1.0f), veloExp), 0.0f, 1.0f);
+        float veloAirResistanceFactor = clamp(
+            std::pow(clamp((temporalMovement.GetLength() - falloffStartVelo) /
+                               (player->GetMaxVelocity() - falloffStartVelo),
+                           0.0f, 1.0f),
+                     veloExp),
+            0.0f, 1.0f);
 
         // simulate footsteps - powered in the middle
         //veloAirResistanceFactor = 1.0f - ((1.0f - veloAirResistanceFactor) * pow(sin(frameBias * pi), 2.0f));

@@ -25,14 +25,14 @@ void HIDKeyboard::LoadConfig() {
     functionButtonState[i] = false;
     previousFunctionButtonState[i] = false;
 
-    functionMapping[i] = (SDLKey)GetConfiguration()->GetInt(("input_keyboard_" + int_to_str(i)).c_str(), (SDLKey)defaultKeyIDs[i]);//48);
+    functionMapping[i] = (SDL_Keycode)GetConfiguration()->GetInt(("input_keyboard_" + int_to_str(i)).c_str(), (SDL_Keycode)defaultKeyIDs[i]);
   }
 }
 
 void HIDKeyboard::SaveConfig() {
   boost::mutex::scoped_lock blah(mutex);
   for (int i = 0; i < e_ButtonFunction_Size; i++) {
-    GetConfiguration()->Set(("input_keyboard_" + int_to_str(i)).c_str(), functionMapping[i]);
+    GetConfiguration()->SetInt(("input_keyboard_" + int_to_str(i)).c_str(), functionMapping[i]);
   }
   GetConfiguration()->SaveFile(GetConfigFilename());
 }

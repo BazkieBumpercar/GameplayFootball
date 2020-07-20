@@ -22,7 +22,7 @@ namespace blunted {
       boost::signals2::signal<void(Gui2CaptureKey*)> sig_OnKey;
 
     protected:
-      signed int keyID;
+      SDL_Keycode keyID;
 
   };
 

@@ -6,8 +6,8 @@
 
 #include "utils/gui2/windowmanager.hpp"
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_rotozoom.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL2_rotozoom.h>
 
 #include "../../gamedefines.hpp"
 

@@ -5,7 +5,7 @@
 #ifndef _HPP_GUI2_VIEW_CAPTION
 #define _HPP_GUI2_VIEW_CAPTION
 
-#include "SDL/SDL_ttf.h"
+#include "SDL2/SDL_ttf.h"
 
 #include "../view.hpp"
 

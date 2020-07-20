@@ -6,7 +6,7 @@
 
 #include "base/log.hpp"
 
-#include "SDL/SDL_rotozoom.h"
+#include "SDL2/SDL2_rotozoom.h"
 
 namespace blunted {
 

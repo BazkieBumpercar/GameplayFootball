@@ -31,11 +31,6 @@ namespace blunted {
   // KEYBOARD EVENT
 
   KeyboardEvent::KeyboardEvent() : Gui2Event(e_Gui2EventType_Keyboard) {
-    for (int i = 0; i < SDLK_LAST; i++) {
-      keyOnce[i] = false;
-      keyContinuous[i] = false;
-      keyRepeated[i] = false;
-    }
   }
 
   KeyboardEvent::~KeyboardEvent() {

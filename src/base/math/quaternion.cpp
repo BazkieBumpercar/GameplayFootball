@@ -4,6 +4,8 @@
 
 #include "quaternion.hpp"
 
+#include <cmath>
+
 #include "bluntmath.hpp"
 #include "vector3.hpp"
 #include "matrix3.hpp"
@@ -77,7 +79,7 @@ namespace blunted {
           1.0f + tmp.elements[8] - tmp.elements[0] - tmp.elements[4], tmp.elements[3] - tmp.elements[1]);
       n4 = elements[2];
     }
-    scale(0.5f / (float)sqrt(n4));
+    scale(0.5f / (float)std::sqrt(n4));
   }
 
 
@@ -200,11 +202,11 @@ namespace blunted {
     float singularityTest = elements[x] * elements[y] + elements[z] * elements[3];
     if (singularityTest > 0.49999 || singularityTest < -0.49999) { // north and south pole
       if (singularityTest > 0) {
-        Z = 2 * atan2(elements[x], elements[z]);
+        Z = 2 * std::atan2(elements[x], elements[z]);
         Y = pi * 0.5;
       }
       if (singularityTest < 0) {
-        Z = -2 * atan2(elements[x], elements[z]);
+        Z = -2 * std::atan2(elements[x], elements[z]);
         Y = -pi * 0.5;
       }
       X = 0;
@@ -213,9 +215,14 @@ namespace blunted {
     real sqx = elements[x] * elements[x];
     real sqy = elements[y] * elements[y];
     real sqz = elements[z] * elements[z];
-    Z = atan2(2 * elements[y] * elements[3] - 2 * elements[x] * elements[z], 1 - 2 * sqy - 2 * sqz);
-    Y =  asin(2 * elements[x] * elements[y] + 2 * elements[z] * elements[3]);
-    X = atan2(2 * elements[x] * elements[3] - 2 * elements[y] * elements[z], 1 - 2 * sqx - 2 * sqz);
+    Z = std::atan2(
+        2 * elements[y] * elements[3] - 2 * elements[x] * elements[z],
+        1 - 2 * sqy - 2 * sqz);
+    Y = std::asin(2 * elements[x] * elements[y] +
+                  2 * elements[z] * elements[3]);
+    X = std::atan2(
+        2 * elements[x] * elements[3] - 2 * elements[y] * elements[z],
+        1 - 2 * sqx - 2 * sqz);
   }
 
   void Quaternion::SetAngles(radian X, radian Y, radian Z) {
@@ -243,9 +250,9 @@ namespace blunted {
 
     // http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle
 
-    rfangle = 2.0f * acos(elements[3]);
+    rfangle = 2.0f * std::acos(elements[3]);
 
-    double div = sqrt(1.0f - elements[3] * elements[3]);
+    double div = std::sqrt(1.0f - elements[3] * elements[3]);
     if (div < 0.000001f) {
       rkaxis.coords[0] = elements[0];
       rkaxis.coords[1] = elements[1];
@@ -306,7 +313,9 @@ namespace blunted {
 
   real Quaternion::GetMagnitude() const {
     if (elements[0] == 0.0f && elements[1] == 0.0f && elements[2] == 0.0f && elements[3] == 0.0f) return 0.0f;
-    real magnitude = sqrt(elements[0] * elements[0] + elements[1] * elements[1] + elements[2] * elements[2] + elements[3] * elements[3]);
+    real magnitude =
+        std::sqrt(elements[0] * elements[0] + elements[1] * elements[1] +
+                  elements[2] * elements[2] + elements[3] * elements[3]);
     if (magnitude < 0.000001) return 0.0f;
     return magnitude;
   }
@@ -317,7 +326,7 @@ namespace blunted {
     if (qmagsq < 0.000001f) {
       Set(QUATERNION_IDENTITY[0], QUATERNION_IDENTITY[1], QUATERNION_IDENTITY[2], QUATERNION_IDENTITY[3]);
     } else {
-      if (abs(1.0 - qmagsq) < 2.107342e-08) {
+      if (std::fabs(1.0 - qmagsq) < 2.107342e-08) {
         scale(2.0 / (1.0 + qmagsq));
       } else {
         scale(1.0 / sqrt(qmagsq));
@@ -407,7 +416,7 @@ namespace blunted {
     //printf("angle: %f\n", angle);
     if (angle > pi) angle -= 2.0f * pi; // range -pi .. pi
 
-    angle = fmod(angle * factor, 2.0f * pi); // remove multiples of 2pi
+    angle = std::fmod(angle * factor, 2.0f * pi);  // remove multiples of 2pi
 
     result.SetAngleAxis(angle, axis);
 

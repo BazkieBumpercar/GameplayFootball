@@ -345,7 +345,12 @@ void Referee::TripNotice(Player *tripee, Player *tripper, int tackleType) {
         tripper->GetTeam()->GetID() != tripee->GetTeam()->GetID() && (match->GetBall()->Predict(0) - tripee->GetPosition()).GetLength() < 8.0) {
       float severity = 1.0;
       if (tripper->TouchAnim()) {
-        severity = pow(clamp(fabs(tripper->GetTouchFrame() - tripper->GetCurrentFrame()) / tripper->GetTouchFrame(), 0.0, 1.0), 0.7) * 0.5;
+        severity = std::pow(clamp(fabs(tripper->GetTouchFrame() -
+                                       tripper->GetCurrentFrame()) /
+                                      tripper->GetTouchFrame(),
+                                  0.0, 1.0),
+                            0.7) *
+                   0.5;
         severity += NormalizedClamp((match->GetBall()->Predict(0) - tripper->GetTouchPos()).GetLength(), 0.0, 2.0) * 0.5;
       }
       // from behind?

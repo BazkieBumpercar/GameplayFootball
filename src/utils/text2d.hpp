@@ -6,14 +6,15 @@
 
 #ifndef _HPP_UTILS_TEXT2D
 #define _HPP_UTILS_TEXT2D
-
+// VK: TODO: Remove this deprecated class from compilation and from the project
 #include "defines.hpp"
 
 #include "scene/objects/image2d.hpp"
 
 #include "scene/scene2d/scene2d.hpp"
 
-#include <SDL/SDL_ttf.h>
+#include "SDL2/SDL.h"
+#include <SDL2/SDL_ttf.h>
 
 namespace blunted {
 

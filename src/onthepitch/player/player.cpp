@@ -1,8 +1,23 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2015
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
 
 #include "player.hpp"
+
+#include <cmath>
 
 #include "../match.hpp"
 #include "../team.hpp"
@@ -14,8 +29,6 @@
 #include "../../utils.hpp"
 
 #include "base/geometry/triangle.hpp"
-
-#include "libs/fastapprox.h"
 
 Player::Player(Team *team, PlayerData *playerData) : PlayerBase(team->GetMatch(), playerData), team(team) {
   menuTask = GetMenuTask();
@@ -230,10 +243,11 @@ void Player::UpdatePossessionStats(bool onInterval) {
       float balldist = (GetPosition() - match->GetBall()->Predict(ms).Get2D()).GetLength() + 0.2f; // add a little buffer
       float maxBallVelo = 50;
       // how long does it take for the ball at max velo to travel balldist?
-      unsigned int timeToGo_ms = int(round((balldist / maxBallVelo) * 1000.0f));
+      unsigned int timeToGo_ms =
+          int(std::round((balldist / maxBallVelo) * 1000.0f));
       timeStep_ms = clamp(timeToGo_ms, 10, 500);
       // round to 10s
-      timeStep_ms = int(floor(timeStep_ms / 10.0f)) * 10;
+      timeStep_ms = int(std::floor(timeStep_ms / 10.0f)) * 10;
     } else timeStep_ms = 10;
 
     previous_ms = ms;
@@ -374,7 +388,9 @@ void Player::PreparePutBuffers(unsigned long snapshotTime_ms) {
       //buf_nameCaption += " X";
     } else if (static_cast<HumanController*>(GetExternalController())->GetActionMode() == 2) {
       //buf_nameCaption += " !";
-      buf_playerColor = buf_playerColor * (sin(match->GetActualTime_ms() * 0.02f) * 0.3f + 0.7f);
+      buf_playerColor =
+          buf_playerColor *
+          (std::sin(match->GetActualTime_ms() * 0.02f) * 0.3f + 0.7f);
     }
 
     //if (hasPossession) buf_nameCaption.append(" P");
@@ -560,5 +576,7 @@ void Player::_CalculateTacticalSituation() {
 
   // distance to opponent goal 0 .. 1 == farthest .. closest
   tacticalSituation.forwardRating = 1.0f - clamp((Vector3(pitchHalfW * -team->GetSide(), 0, 0) - GetPosition()).GetLength() / (pitchHalfW * 2.0f), 0.0f, 1.0f);
-  tacticalSituation.forwardRating = pow(tacticalSituation.forwardRating, 1.5f); // more important when close to goal
+  tacticalSituation.forwardRating =
+      std::pow(tacticalSituation.forwardRating,
+               1.5f);  // more important when close to goal
 }

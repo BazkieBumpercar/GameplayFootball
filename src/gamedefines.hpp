@@ -9,7 +9,7 @@
 
 #include "base/math/vector3.hpp"
 
-#include <SDL/SDL.h> // for key ids
+#include <SDL2/SDL.h> // for key ids
 
 using namespace blunted;
 
@@ -74,7 +74,7 @@ typedef std::list<int> DataSet;
 typedef std::deque<int> DataSet;
 #endif
 
-const SDLKey defaultKeyIDs[18] = { SDLK_UP, SDLK_RIGHT, SDLK_DOWN, SDLK_LEFT, SDLK_w, SDLK_a, SDLK_s, SDLK_d, SDLK_w, SDLK_a, SDLK_s, SDLK_d, SDLK_q, SDLK_z, SDLK_e, SDLK_c, SDLK_F1, SDLK_RETURN };
+const SDL_Keycode defaultKeyIDs[18] = { SDLK_UP, SDLK_RIGHT, SDLK_DOWN, SDLK_LEFT, SDLK_w, SDLK_a, SDLK_s, SDLK_d, SDLK_w, SDLK_a, SDLK_s, SDLK_d, SDLK_q, SDLK_z, SDLK_e, SDLK_c, SDLK_F1, SDLK_RETURN };
 
 class Player;
 

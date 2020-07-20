@@ -6,8 +6,7 @@
 
 #include "../windowmanager.hpp"
 
-#include "SDL/SDL_gfxBlitFunc.h"
-#include "SDL/SDL_rotozoom.h"
+#include "SDL2/SDL2_rotozoom.h"
 
 namespace blunted {
 

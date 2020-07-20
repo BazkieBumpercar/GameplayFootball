@@ -214,7 +214,7 @@ KeyboardPage::KeyboardPage(Gui2WindowManager *windowManager, const Gui2PageData 
 
   for (int i = 0; i < 18; i++) {
     keyButtons[i] = 0;
-    keyIDs[i] = (SDLKey)GetConfiguration()->GetInt(("input_keyboard_" + int_to_str(i)).c_str(), (SDLKey)defaultKeyIDs[i]);//48);
+    keyIDs[i] = (SDL_Keycode)GetConfiguration()->GetInt(("input_keyboard_" + int_to_str(i)).c_str(), (SDL_Keycode)defaultKeyIDs[i]);//48);
   }
 
   Gui2Button *buttonDefaults = new Gui2Button(windowManager, "button_keyboard_defaults", 0, 0, 30, 3, "reset to defaults");
@@ -377,8 +377,8 @@ void KeyboardPage::OnClose() {
 
 void KeyboardPage::SetDefaults() {
   for (int i = 0; i < 18; i++) {
-    keyButtons[i]->GetCaptionWidget()->SetCaption(SDL_GetKeyName((SDLKey)defaultKeyIDs[i]));
-    keyIDs[i] = (SDLKey)defaultKeyIDs[i];
+    keyButtons[i]->GetCaptionWidget()->SetCaption(SDL_GetKeyName((SDL_Keycode)defaultKeyIDs[i]));
+    keyIDs[i] = (SDL_Keycode)defaultKeyIDs[i];
   }
 }
 
@@ -405,7 +405,7 @@ void KeyboardPage::SetKey(int buttonID, const std::string &name) {
 }
 
 void KeyboardPage::SetKeyDone(int buttonID) {
-  SDLKey value = (SDLKey)captureKey->GetKeyID();
+  SDL_Keycode value = (SDL_Keycode)captureKey->GetKeyID();
   //printf("clickah! %i\n", value);
   keyButtons[buttonID]->GetCaptionWidget()->SetCaption(SDL_GetKeyName(value));
   keyIDs[buttonID] = value;
@@ -1239,19 +1239,21 @@ GraphicsPage::GraphicsPage(Gui2WindowManager *windowManager, const Gui2PageData 
         break;
     }
 
+    // VK: TODO: Use SDL2 calls to get available modes for the display
+    //
     //get available fullscreen/hardware modes
-    modes = SDL_ListModes(&format, SDL_FULLSCREEN);
-    if (modes) {
-      for(int i = 0; modes[i]; ++i) {
+    //modes = SDL_ListModes(&format, SDL_FULLSCREEN);
+    //if (modes) {
+      //for(int i = 0; modes[i]; ++i) {
         Resolution res;
-        res.x = modes[i]->w;
-        res.y = modes[i]->h;
-        res.bpp = bpp;
+        res.x = 1280;//modes[i]->w;
+        res.y = 1024;//modes[i]->h;
+        res.bpp = 32;//bpp;
         res.fullscreen = false;
         //if (res.bpp == 32) if (!CheckDuplicate(resolutions, res.x, res.y))
         resolutions.push_back(res);
-      }
-    }
+      //}
+    //}
   }
 #endif
 

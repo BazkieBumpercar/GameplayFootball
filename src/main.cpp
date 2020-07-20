@@ -32,7 +32,7 @@
 
 #include "utils/orbitcamera.hpp"
 
-#include "SDL/SDL_ttf.h"
+#include "SDL2/SDL_ttf.h"
 
 #if defined(WIN32) && defined(__MINGW32__)
 #undef main

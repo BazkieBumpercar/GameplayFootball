@@ -1,3 +1,16 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2014
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
@@ -7,7 +20,9 @@
 
 #include "base/math/vector3.hpp"
 #include "managers/usereventmanager.hpp"
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
+#include "SDL2/SDL_keyboard.h"
+#include <set>
 
 namespace blunted {
 
@@ -66,24 +81,25 @@ namespace blunted {
       KeyboardEvent();
       virtual ~KeyboardEvent();
 
-      bool GetKeyOnce(int id) const { return keyOnce[id]; }
-      void SetKeyOnce(int id) { keyOnce[id] = true; }
-      bool GetKeyContinuous(int id) const { return keyContinuous[id]; }
-      void SetKeyContinuous(int id) { keyContinuous[id] = true; }
-      bool GetKeyRepeated(int id) const { return keyRepeated[id]; }
-      void SetKeyRepeated(int id) { keyRepeated[id] = true; }
-      std::vector<SDL_keysym> &GetKeysymOnce() { return keysymOnce; }
-      std::vector<SDL_keysym> &GetKeysymContinuous() { return keysymContinuous; }
-      std::vector<SDL_keysym> &GetKeysymRepeated() { return keysymRepeated; }
+      const std::set<SDL_Keycode> &GetKeyOnce() const { return keyOnce; }
+      bool GetKeyOnce(SDL_Keycode id) const { return keyOnce.count(id); }
+      void SetKeyOnce(SDL_Keycode id) { keyOnce.insert(id); }
+      bool GetKeyContinuous(SDL_Keycode id) const { return keyContinuous.count(id); }
+      void SetKeyContinuous(SDL_Keycode id) { keyContinuous.insert(id); }
+      bool GetKeyRepeated(SDL_Keycode id) const { return keyRepeated.count(id); }
+      void SetKeyRepeated(SDL_Keycode id) { keyRepeated.insert(id); }
+      std::set<SDL_Keycode> &GetKeysymOnce() { return keysymOnce; }
+      std::set<SDL_Keycode> &GetKeysymContinuous() { return keysymContinuous; }
+      std::set<SDL_Keycode> &GetKeysymRepeated() { return keysymRepeated; }
 
     protected:
-      std::vector<SDL_keysym> keysymOnce;
-      std::vector<SDL_keysym> keysymContinuous;
-      std::vector<SDL_keysym> keysymRepeated;
+      std::set<SDL_Keycode> keysymOnce;
+      std::set<SDL_Keycode> keysymContinuous;
+      std::set<SDL_Keycode> keysymRepeated;
 
-      bool keyOnce[SDLK_LAST];
-      bool keyContinuous[SDLK_LAST];
-      bool keyRepeated[SDLK_LAST];
+      std::set<SDL_Keycode> keyOnce;
+      std::set<SDL_Keycode> keyContinuous;
+      std::set<SDL_Keycode> keyRepeated;
 
   };
 

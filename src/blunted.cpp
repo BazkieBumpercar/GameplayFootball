@@ -42,7 +42,7 @@
 
 #include "utils/console.hpp"
 
-#include "SDL/SDL_ttf.h"
+#include "SDL2/SDL_ttf.h"
 
 namespace boost {
   void assertion_failed(char const * expr, char const * function, char const * file, long line) {

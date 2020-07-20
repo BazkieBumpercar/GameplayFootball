@@ -1,3 +1,16 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2015
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
@@ -5,6 +18,8 @@
 #include "../../../main.hpp"
 
 #include "elizacontroller.hpp"
+
+#include <cmath>
 
 #include "../../AIsupport/mentalimage.hpp"
 #include "../../AIsupport/AIfunctions.hpp"
@@ -18,8 +33,6 @@
 #include "strategies/offtheball/default_off.hpp"
 #include "strategies/offtheball/goalie_default.hpp"
 #include "../playerofficial.hpp"
-
-#include "libs/fastapprox.h"
 
 ElizaController::ElizaController(Match *match) : PlayerController(match) {
   lastDesiredDirection = Vector3(0);
@@ -465,7 +478,7 @@ float ElizaController::GetLazyVelocity(float desiredVelocityFloat) {
   // does not heed dribble clamp above, as to simulate players having to stop to catch their breath
   float breathLeftFactor = 1.0f - NormalizedClamp(CastPlayer()->GetAverageVelocity(10), idleVelocity, sprintVelocity);
   float workRate = CastPlayer()->GetStat("mental_workrate");
-  breathLeftFactor = pow(breathLeftFactor, 0.8f - workRate * 0.2f);
+  breathLeftFactor = std::pow(breathLeftFactor, 0.8f - workRate * 0.2f);
   breathLeftFactor = clamp(breathLeftFactor * 1.2f, 0.0f, 1.0f); // make sure beginning of sprint is full speed
   breathLeftFactor = breathLeftFactor * lazyFactor + 1.0f * (1.0f - lazyFactor); // sometimes, we really need to force it
   resultingVelocityFloat = std::min(resultingVelocityFloat, sprintVelocity * breathLeftFactor);
@@ -672,7 +685,7 @@ Vector3 ElizaController::GetSupportPosition_ForceField(const MentalImage *mental
       float amount = 22.0f;
       float laneY = -signSide(mainManPos.coords[1]) * 8.0f;
       amount *= curve(1.0f - NormalizedClamp(fabs(laneY - currentPos.coords[1]), 0.0f, 30.0f), 1.0f);
-      float delta = -team->GetSide() * pow(dynamicMindSet, 1.5f) * amount;
+      float delta = -team->GetSide() * std::pow(dynamicMindSet, 1.5f) * amount;
       spot.origin.coords[0] += delta;
     }
 
@@ -805,7 +818,7 @@ void ElizaController::GetOnTheBallCommands(std::vector<PlayerCommand> &commandQu
 
   // DECIDE WHAT TO DO
 
-  float longPossessionFactor = fastpow(NormalizedClamp(CastPlayer()->GetPossessionDuration_ms(), 0, 5000), 2.0f);
+  float longPossessionFactor = std::pow(NormalizedClamp(CastPlayer()->GetPossessionDuration_ms(), 0, 5000), 2.0f);
 
   // first selection
   float forwardSpaceWeight = 0.4f;
@@ -816,7 +829,11 @@ void ElizaController::GetOnTheBallCommands(std::vector<PlayerCommand> &commandQu
   float tacticalImprovementThreshold = 0.06f * (1.0f - AI_GetMindSet(CastPlayer()->GetDynamicFormationEntry().role)); // only go on with pass selection if recipient has this much tactical advantage over current player
 
   // second selection
-  float tacticalDiffWeight = 1.0f + pow(AI_GetMindSet(CastPlayer()->GetDynamicFormationEntry().role), 2.0f) * 10.0f;
+  float tacticalDiffWeight =
+      1.0f +
+      std::pow(AI_GetMindSet(CastPlayer()->GetDynamicFormationEntry().role),
+               2.0f) *
+          10.0f;
   float passWeight = 1.0f;
   float passMinimum = 0.2f * (1.0f - AI_GetMindSet(CastPlayer()->GetDynamicFormationEntry().role)) - longPossessionFactor * 0.1f;
 
@@ -937,7 +954,7 @@ void ElizaController::GetOnTheBallCommands(std::vector<PlayerCommand> &commandQu
     if (odds1 > odds) { odds = odds1; y = -3.5f; }
     if (odds3 > odds) { odds = odds3; y =  3.5f; }
 
-    odds = pow(odds, 0.5f);
+    odds = std::pow(odds, 0.5f);
     if (Verbose()) printf("ODDS: %f\n", odds);
 
     if (odds + random(0.0f, 0.5f) > 0.5f) {

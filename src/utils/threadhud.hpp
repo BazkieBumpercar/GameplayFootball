@@ -11,7 +11,7 @@
 #include "scene/scene2d/scene2d.hpp"
 #include "scene/objects/image2d.hpp"
 
-#include <SDL/SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 
 namespace blunted {
 

@@ -72,24 +72,25 @@ namespace blunted {
   }
 
   void sdl_line(SDL_Surface *surface, int x1, int y1, int x2, int y2, Uint32 color) {
-    sge_Line(surface, x1, y1, x2, y2, color);
-    sge_AALine(surface, x1, y1, x2, y2, color);
+// VK: TODO: Use SDL2 functions or remove
+//    sge_Line(surface, x1, y1, x2, y2, color);
+//    sge_AALine(surface, x1, y1, x2, y2, color);
   }
 
   void sdl_triangle_filled(SDL_Surface *surface, const Triangle &triangle, Uint8 r, Uint8 g, Uint8 b) {
     // uses only the x, y part of the triangle
 
     // sge: inverse-wounded triangles won't be drawn, so draw twice, both ways round. lame fix :D
-
-    sge_FilledTrigon(surface, int(triangle.GetVertex(0).coords[0]), int(triangle.GetVertex(0).coords[1]),
-                              int(triangle.GetVertex(1).coords[0]), int(triangle.GetVertex(1).coords[1]),
-                              int(triangle.GetVertex(2).coords[0]), int(triangle.GetVertex(2).coords[1]),
-                              r, g, b);
-
-    sge_FilledTrigon(surface, int(triangle.GetVertex(1).coords[0]), int(triangle.GetVertex(1).coords[1]),
-                              int(triangle.GetVertex(0).coords[0]), int(triangle.GetVertex(0).coords[1]),
-                              int(triangle.GetVertex(2).coords[0]), int(triangle.GetVertex(2).coords[1]),
-                              r, g, b);
+// VK: TODO: Replace with SDL2 calls or remove
+//    sge_FilledTrigon(surface, int(triangle.GetVertex(0).coords[0]), int(triangle.GetVertex(0).coords[1]),
+//                              int(triangle.GetVertex(1).coords[0]), int(triangle.GetVertex(1).coords[1]),
+//                              int(triangle.GetVertex(2).coords[0]), int(triangle.GetVertex(2).coords[1]),
+//                              r, g, b);
+//
+//    sge_FilledTrigon(surface, int(triangle.GetVertex(1).coords[0]), int(triangle.GetVertex(1).coords[1]),
+//                              int(triangle.GetVertex(0).coords[0]), int(triangle.GetVertex(0).coords[1]),
+//                              int(triangle.GetVertex(2).coords[0]), int(triangle.GetVertex(2).coords[1]),
+//                              r, g, b);
   }
 
   void sdl_rectangle_filled(SDL_Surface *surface, int x, int y, int width, int height, Uint32 color) {

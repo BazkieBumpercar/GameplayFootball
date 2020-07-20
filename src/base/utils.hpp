@@ -92,12 +92,14 @@ namespace blunted {
       T GetAverage(unsigned int time_ms) const {
         T total = 0;
         unsigned int count = 0;
-        typename std::list<T>::const_iterator iter = values.end();
-        iter--;
-        while (count <= time_ms / 10) {
-          total += (*iter);
-          count++;
-          if (iter == values.begin()) break; else iter--;
+        if (!values.empty()) {
+          typename std::list<T>::const_iterator iter = values.end();
+          iter--;
+          while (count <= time_ms / 10) {
+            total += (*iter);
+            count++;
+            if (iter == values.begin()) break; else iter--;
+          }
         }
         if (count > 0) total /= (float)count;
         return total;

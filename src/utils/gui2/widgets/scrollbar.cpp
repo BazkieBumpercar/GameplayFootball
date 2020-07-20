@@ -4,7 +4,6 @@
 
 #include "scrollbar.hpp"
 
-#include "SDL/SDL_gfxBlitFunc.h"
 
 #include "../windowmanager.hpp"
 

@@ -3,7 +3,7 @@
 // i do not offer support, so don't ask. to be used for inspiration :)
 
 /* DEPRECATED CLASS */
-
+// VK: TODO: Remove this deprecated class from compilation and from the project
 #include "text2d.hpp"
 
 #include "managers/resourcemanagerpool.hpp"
@@ -36,7 +36,8 @@ namespace blunted {
     SDL_Surface *sdlText = RenderTextSurface(empty, Vector3(0, 0, 0));
 
     // create power-of-2 version
-    SDL_Surface *sdlTextPow2 = SDL_CreateRGBSurface(sdlText->flags | SDL_SRCALPHA, pot(sdlText->w), pot(sdlText->h), 32, r_mask, g_mask, b_mask, a_mask);
+    bool alpha = SDL_ISPIXELFORMAT_ALPHA(sdlText->format->format);
+    SDL_Surface *sdlTextPow2 = SDL_CreateRGBSurface(alpha, pot(sdlText->w), pot(sdlText->h), 32, r_mask, g_mask, b_mask, a_mask);
 
     //printf("address old: %i\n", sdlTextPow2);
 
@@ -93,12 +94,12 @@ namespace blunted {
     bla.w = sdlTextPow2->w;
     bla.h = sdlTextPow2->h;
 
-    SDL_SetAlpha(sdlText, 0, SDL_ALPHA_OPAQUE);
+    SDL_SetSurfaceAlphaMod(sdlText, SDL_ALPHA_OPAQUE);
     SDL_FillRect(sdlTextPow2, &bla, SDL_MapRGBA(sdlTextPow2->format, 0, 0, 0, 0));
     SDL_BlitSurface(sdlText, &rect, sdlTextPow2, &bla);
     SDL_FreeSurface(sdlText);
     //sdl_flipsurface(sdlTextPow2);
-    SDL_SetAlpha(sdlTextPow2, SDL_SRCALPHA, 128);
+    SDL_SetSurfaceAlphaMod(sdlTextPow2, 128);
 
     surface->resourceMutex.unlock();
     image->subjectMutex.unlock();
@@ -107,7 +108,7 @@ namespace blunted {
   }
 
   SDL_Surface *Text2D::RenderTextSurface(const std::string &text, const Vector3 &color) const {
-    SDL_Color sdlColor = { int(floor(color.coords[0] * 255.0)), int(floor(color.coords[1] * 255.0)), int(floor(color.coords[2] * 255.0)), 0 };
+    SDL_Color sdlColor = { (unsigned char)(floor(color.coords[0] * 255.0)), (unsigned char)(floor(color.coords[1] * 255.0)), (unsigned char)(floor(color.coords[2] * 255.0)), 0 };
     SDL_Color sdlBackColor = { 0, 0, 0, 0 };
 
     SDL_Surface *sdlText = TTF_RenderUTF8_Blended(font, text.c_str(), sdlColor);

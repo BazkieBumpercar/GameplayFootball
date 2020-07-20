@@ -27,12 +27,10 @@ namespace blunted {
     if (event->GetKeyOnce(SDLK_ESCAPE) == true) {
       event->Ignore();
     } else {
-      for (int i = 0; i < SDLK_LAST; i++) {
-        if (event->GetKeyOnce(i) == true) {
-          keyID = i;
-          sig_OnKey(this);
-          break;
-        }
+      for (auto ev : event->GetKeyOnce()) {
+        keyID = ev;
+        sig_OnKey(this);
+        break;
       }
     }
   }

@@ -5,7 +5,7 @@
 #include "opengl_renderer3d.hpp"
 
 #include <GL/glu.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #include "base/log.hpp"
 #include "managers/environmentmanager.hpp"
@@ -41,7 +41,7 @@ namespace blunted {
   };
 
   void OpenGLRenderer3D::SwapBuffers() {
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(window);
   }
 
   void OpenGLRenderer3D::LoadMatrix(const Matrix4 &mat) {
@@ -66,10 +66,12 @@ namespace blunted {
 
     // todo: use shaders maybe? (not sure if use of compat. context slows things down)
 
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0, context->w, context->h, 0, 0.1, 10);
+    // VK: TODO: check window size instead?
+    glOrtho(0, context_width, context_height, 0, 0.1, 10);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -352,7 +354,11 @@ namespace blunted {
 
 //#endif
 
-    context = SDL_SetVideoMode(width, height, bpp, SDL_OPENGL/* | SDL_RESIZABLE*/ | (fullscreen ? SDL_FULLSCREEN : 0));
+    window = SDL_CreateWindow("Gameplay Football", SDL_WINDOWPOS_UNDEFINED,
+                                SDL_WINDOWPOS_UNDEFINED, width, height,
+                                SDL_WINDOW_OPENGL /* | SDL_RESIZABLE*/ |
+                                (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
+    context = SDL_GL_CreateContext(window);
     if (!context) {
       std::string errorString = SDL_GetError();
       Log(e_FatalError, "OpenGLRenderer3D", "CreateContext", "Failed on SDL error: " + errorString);
@@ -374,8 +380,6 @@ namespace blunted {
     } else higherThan32 = true;
 
     if (!higherThan32) Log(e_Warning, "OpenGLRenderer3D", "CreateContext", "OpenGL version not equal to or higher than 3.2 (or not reported as such)");
-
-    SDL_WM_SetCaption("Gameplay Football", NULL);
 
 #ifdef WIN32
     SDL_VERSION(&wmInfo.version);
@@ -2194,9 +2198,6 @@ namespace blunted {
       printf("IMG_Init: %s\n", IMG_GetError());
     }
 
-    // we want the unicode stuff on keyboard keypresses (needs to be in ogl context or sdl doesn't get it)
-    SDL_EnableUNICODE(SDL_ENABLE);
-
     SDL_Event event;
 
     bool quit = false;
@@ -2207,11 +2208,19 @@ namespace blunted {
       while (SDL_PollEvent(&event)) {
 
         // context losing/gaining focus
-        if (event.type == SDL_ACTIVEEVENT)
-          if (event.active.state & SDL_APPINPUTFOCUS) event.active.gain == 0 ? contextIsActive = false : contextIsActive = true;
+        if (event.type == SDL_WINDOWEVENT) {
+          if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+            contextIsActive = false;
+          }
+          else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+            contextIsActive = true;
+          }
+        }
 
         switch (event.type) {
-          case SDL_QUIT: EnvironmentManager::GetInstance().SignalQuit(); break;
+          case SDL_QUIT:
+            EnvironmentManager::GetInstance().SignalQuit();
+            break;
           case SDL_KEYDOWN:
             switch(event.key.keysym.sym) {
               case SDLK_F12:

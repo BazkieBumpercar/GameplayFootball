@@ -1,3 +1,16 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2014
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
@@ -10,9 +23,6 @@ namespace blunted {
 
   Gui2Task::Gui2Task(boost::shared_ptr<Scene2D> scene2D, float aspectRatio, float margin) : scene2D(scene2D) {
     windowManager = new Gui2WindowManager(scene2D, aspectRatio, margin);
-    for (int i = 0; i < SDLK_LAST; i++) {
-      prevKeyState[i] = false;
-    }
     for (int j = 0; j < _JOYSTICK_MAX; j++) {
       for (int i = 0; i < _JOYSTICK_MAXBUTTONS; i++) {
         prevButtonState[j][i] = false;
@@ -67,76 +77,56 @@ namespace blunted {
     KeyboardEvent *event = new KeyboardEvent();
     bool needsKeyboardEvent = false;
 
-    for (int i = 0; i < SDLK_LAST; i++) {
+    auto currentKeyState = UserEventManager::GetInstance().GetKeyboardState();
 
-      bool pressed = UserEventManager::GetInstance().GetKeyboardState((SDLKey)i);
+    for (auto keyState : currentKeyState) {
+      auto pressedKey = keyState.first;
 
       // continuous
-      if (pressed) {
+      event->SetKeyContinuous(pressedKey);
+      //printf("key %i pressed\n", pressedKey);
 
-        event->SetKeyContinuous(i);
-        SDL_keysym tmp; // in future: use keysyms instead of keys. see commentary in usereventmanager.hpp
-        tmp.sym = (SDLKey)i;
-        event->GetKeysymContinuous().push_back(tmp);
-        //printf("key %i pressed\n", i);
-
-        needsKeyboardEvent = true;
-      }
+      needsKeyboardEvent = true;
 
       // only when pressed first time
-      if (pressed && !prevKeyState[i]) {
-
-        event->SetKeyOnce(i);
-        SDL_keysym tmp; // in future: use keysyms instead of keys. see commentary in usereventmanager.hpp
-        tmp.sym = (SDLKey)i;
-        event->GetKeysymOnce().push_back(tmp);
+      if (prevKeyState.count(pressedKey) == 0) {
+        event->SetKeyOnce(pressedKey);
 
         if (keyboard) {
-          if ((SDLKey)i == SDLK_RETURN) {
+          if (pressedKey == SDLK_RETURN) {
             wEvent->SetActivate();
             needsWindowingEvent = true;
           }
-          else if ((SDLKey)i == SDLK_ESCAPE) {
+          else if (pressedKey == SDLK_ESCAPE) {
             wEvent->SetEscape();
             needsWindowingEvent = true;
           }
         }
-
-        needsKeyboardEvent = true;
       }
 
-      // when pressed first time, or when held for longer than some treshold
-      if (pressed && (!prevKeyState[i] || UserEventManager::GetInstance().GetLastKeyPressDiff_ms((SDLKey)i) > 250)) {
-
-        event->SetKeyRepeated(i);
-        SDL_keysym tmp; // in future: use keysyms instead of keys. see commentary in usereventmanager.hpp
-        tmp.sym = (SDLKey)i;
-        event->GetKeysymRepeated().push_back(tmp);
+      // when pressed first time, or when held for longer than some threshold
+      if (prevKeyState.count(pressedKey) == 0 || UserEventManager::GetInstance().GetLastKeyPressDiff_ms(pressedKey) > 250) {
+        event->SetKeyRepeated(pressedKey);
 
         if (keyboard) {
-          if ((SDLKey)i == SDLK_UP) {
+          if (pressedKey == SDLK_UP) {
             wEvent->SetDirection(Vector3(0, -1, 0));
             needsWindowingEvent = true;
-          }
-          else if ((SDLKey)i == SDLK_RIGHT) {
+          } else if (pressedKey == SDLK_RIGHT) {
             wEvent->SetDirection(Vector3(1, 0, 0));
             needsWindowingEvent = true;
-          }
-          else if ((SDLKey)i == SDLK_DOWN) {
+          } else if (pressedKey == SDLK_DOWN) {
             wEvent->SetDirection(Vector3(0, 1, 0));
             needsWindowingEvent = true;
-          }
-          else if ((SDLKey)i == SDLK_LEFT) {
+          } else if (pressedKey == SDLK_LEFT) {
             wEvent->SetDirection(Vector3(-1, 0, 0));
             needsWindowingEvent = true;
           }
         }
-
-        needsKeyboardEvent = true;
       }
-
-      prevKeyState[i] = pressed;
     }
+
+    prevKeyState = currentKeyState;
 
     if (needsKeyboardEvent) {
       if (windowManager->GetFocus() == currentFocus) windowManager->GetFocus()->ProcessEvent(event);

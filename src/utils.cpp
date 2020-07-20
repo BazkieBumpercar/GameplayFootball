@@ -670,7 +670,7 @@ template <typename T> T TemporalSmoother<T>::GetValue(unsigned long currentTime_
   // else if (targetTime_ms > value2.time_ms) printf(">");
   // else printf("_");
 
-  if (debug) printf("current: %lu, target: %lu, t1: %lu, t2: %lu, t1index/t2index/size: %i/%i/%i\n", currentTime_ms, targetTime_ms, value1.time_ms, value2.time_ms, t1index, t2index, values.size());
+  if (debug) printf("current: %lu, target: %lu, t1: %lu, t2: %lu, t1index/t2index/size: %i/%i/%lu\n", currentTime_ms, targetTime_ms, value1.time_ms, value2.time_ms, t1index, t2index, values.size());
   // if (value1.time_ms == 0) printf("1");
   // if (value2.time_ms == 0) printf("2");
   if (value1.time_ms == 0) return value2.data;

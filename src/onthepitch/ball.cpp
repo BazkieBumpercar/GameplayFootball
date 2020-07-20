@@ -4,6 +4,8 @@
 
 #include "ball.hpp"
 
+#include <cmath>
+
 #include "utils/objectloader.hpp"
 #include "scene/objectfactory.hpp"
 
@@ -13,8 +15,6 @@
 #include "scene/resources/soundbuffer.hpp"
 
 #include "match.hpp"
-
-#include "libs/fastapprox.h"
 
 #include "../main.hpp"
 
@@ -178,14 +178,17 @@ BallSpatialInfo Ball::CalculatePrediction() {
     // air resistance
 
     float momentumVelo = momentumPredict.GetLength();
-    float momentumVeloDragged = momentumVelo - drag * pow(momentumVelo, 2.0f) * timeStep;
+    float momentumVeloDragged =
+        momentumVelo - drag * std::pow(momentumVelo, 2.0f) * timeStep;
     if (drag_enabled) momentumPredict = momentumPredict.GetNormalized(0) * momentumVeloDragged;
 
 
     float ballBottom = nextPos.coords[2] - 0.11f;
     float grassInfluenceBias = clamp(1.0f - (ballBottom / grassHeight), 0.0f, 1.0f); // 0 == no friction, 1 == all friction
     // todo: seems to cause 'feedback' on multibump (1st bump: ball gets lots of rotation. second bump: rotation makes ball accelerate too much)
-    grassInfluenceBias = pow(grassInfluenceBias, 0.7f); // at half grass height, there's already a bigger amount of friction than 50%
+    grassInfluenceBias = std::pow(
+        grassInfluenceBias, 0.7f);  // at half grass height, there's already a
+                                    // bigger amount of friction than 50%
     //printf("%f\n", bias);
 
 
@@ -212,7 +215,7 @@ BallSpatialInfo Ball::CalculatePrediction() {
       Vector3 xy = momentumPredict.Get2D();
       float velo = xy.GetLength();
 
-      float newVelo = velo - adaptedFriction * pow(velo, 2.0f) * timeStep;
+      float newVelo = velo - adaptedFriction * std::pow(velo, 2.0f) * timeStep;
 
       // linear friction
       newVelo = clamp(newVelo - (linearFriction * grassInfluenceBias * timeStep), 0.0f, 100000.0f);
@@ -230,8 +233,7 @@ BallSpatialInfo Ball::CalculatePrediction() {
     float ballRadius = 0.11f;
     float postRadius = 0.07f;
 
-    netAbsorbInv = pow(netAbsorbInv, timeStep * 100.0f);
-
+    netAbsorbInv = std::pow(netAbsorbInv, timeStep * 100.0f);
 
     // woodwork
 
@@ -349,7 +351,8 @@ BallSpatialInfo Ball::CalculatePrediction() {
         float netDist;
         netDist = fabs(fabs(nextPos.coords[1]) - goalHalfWidth);
         netDist = clamp(netDist, 0, 1);
-        float power = pow(netDist, powFactor) * -signSide(nextPos.coords[1]) * inGoal;
+        float power = std::pow(netDist, powFactor) *
+                      -signSide(nextPos.coords[1]) * inGoal;
 
         // net is stuck to woodwork so lay off there
         float woodworkTensionBiasInv = clamp((fabs(momentumPredict.coords[0]) - pitchHalfW) * 2.0f, 0.0f, 1.0f);
@@ -372,7 +375,8 @@ BallSpatialInfo Ball::CalculatePrediction() {
         float netDist;
         netDist = fabs(fabs(nextPos.coords[0]) - (pitchHalfW + goalDepth));
         netDist = clamp(netDist, 0, 1);
-        float power = pow(netDist, powFactor) * -signSide(nextPos.coords[0]) * inGoal;
+        float power = std::pow(netDist, powFactor) *
+                      -signSide(nextPos.coords[0]) * inGoal;
         momentumPredict.coords[0] = momentumPredict.coords[0] * netAbsorbInv + power * powerFac * (100 * timeStep);
 
         if (predictTime_ms == 10) ballTouchesNet = true;
@@ -390,7 +394,7 @@ BallSpatialInfo Ball::CalculatePrediction() {
         float netDist;
         netDist = fabs(fabs(nextPos.coords[2]) - goalHeight);
         netDist = clamp(netDist, 0, 1);
-        float power = pow(netDist, powFactor) * -inGoal;
+        float power = std::pow(netDist, powFactor) * -inGoal;
 
         // net is stuck to woodwork so lay off there
         float woodworkTensionBiasInv = clamp((fabs(momentumPredict.coords[0]) - pitchHalfW) * 2.0f, 0.0f, 1.0f);
@@ -436,8 +440,10 @@ BallSpatialInfo Ball::CalculatePrediction() {
       if (frictionFactor > 0.0f) {
         maxRotationChangePerSecond += 4.0f * pi;
       }
-      radian factor = 1.0f;
-      if (rotationChangePerSecond > maxRotationChangePerSecond) factor = maxRotationChangePerSecond / rotationChangePerSecond;
+      volatile radian factor = 1.0f;
+      if (rotationChangePerSecond > maxRotationChangePerSecond) {
+        factor = maxRotationChangePerSecond / rotationChangePerSecond;
+      }
       if (factor < 1.0f) {
         oldToNewRotation = oldToNewRotation.GetRotationMultipliedBy(factor);
       }
@@ -486,7 +492,7 @@ BallSpatialInfo Ball::CalculatePrediction() {
       float swerveAmount = NormalizedClamp(momentumPredict.GetLength(), 0.0f, 70.0f);
       // http://www.wolframalpha.com/input/?i=sin%28x+*+pi+*+0.7%29+^+2.2+from+x+%3D+0+to+1
       // <bazkie_drunk> ^ tnx, past myself, that's very convenient!
-      swerveAmount = fastpow(sin(swerveAmount * pi * 0.94f), 2.6f);
+      swerveAmount = pow(std::sin(swerveAmount * pi * 0.94f), 2.6f);
       Vector3 adaptedMomentumPredict = momentumPredict.GetNormalized(0) * swerveAmount * 30.0f;
 
       Vector3 swerve = adaptedMomentumPredict.GetCrossProduct(-rotVec) * 1.0;

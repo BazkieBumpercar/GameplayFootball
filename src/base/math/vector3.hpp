@@ -1,9 +1,24 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2014
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
 
 #ifndef _hpp_bluntmath_vector3
 #define _hpp_bluntmath_vector3
+
+#include <cmath>
 
 #include "bluntmath.hpp"
 #include "matrix3.hpp"
@@ -28,6 +43,8 @@ namespace blunted {
       void Set(real xyz);
       void Set(real x, real y, real z);
       void Set(const Vector3 &vec);
+      float GetEnvCoord(int index) const;
+      void SetEnvCoord(int index, float value);
 
       // ----- operator overloading
       bool operator == (const Vector3 &vector) const;
@@ -100,6 +117,7 @@ namespace blunted {
 
   };
 
+  std::ostream& operator<<(std::ostream& os, const Vector3& v);
 
   // INLINED FUNCTIONS
 
@@ -242,10 +260,8 @@ namespace blunted {
 
   inline
   real Vector3::GetLength() const {
-    // premature optimization ;)
-    if (this->coords[0] == 0.0f && this->coords[1] == 0.0f && this->coords[2] == 0.0f) return 0.0f;
-
-    float length = sqrt(pow(coords[0], 2) + pow(coords[1], 2) + pow(coords[2], 2));
+    float length = sqrt(std::pow(coords[0], 2) + std::pow(coords[1], 2) +
+                        std::pow(coords[2], 2));
 
     if (length < 0.000001) length = 0;
     return length;
@@ -253,19 +269,21 @@ namespace blunted {
 
   inline
   real Vector3::GetSquaredLength() const {
-    return pow(coords[0], 2) + pow(coords[1], 2) + pow(coords[2], 2);
+    return coords[0] * coords[0] + coords[1] * coords[1] + coords[2] * coords[2];
   }
 
   inline
   radian Vector3::GetAngle2D() const {
-    real angle = atan2(coords[1], coords[0]);
+    real angle = std::atan2(coords[1], coords[0]);
     if (angle < 0) angle += 2 * pi;
     return angle;
   }
 
   inline
   radian Vector3::GetAngle2D(const Vector3 &test) const {
-    radian angle = -atan2(coords[0] * test.coords[1] - coords[1] * test.coords[0], coords[0] * test.coords[0] + coords[1] * test.coords[1]);
+    radian angle =
+        -std::atan2(coords[0] * test.coords[1] - coords[1] * test.coords[0],
+                    coords[0] * test.coords[0] + coords[1] * test.coords[1]);
     angle = ModulateIntoRange(-pi, pi, angle);
     return angle;
   }
@@ -297,8 +315,8 @@ namespace blunted {
 
   inline
   void Vector3::Rotate2D(const radian angle) {
-    real x = (coords[0] * cos(angle)) - (coords[1] * sin(angle));
-    real y = (coords[1] * cos(angle)) + (coords[0] * sin(angle));
+    real x = (coords[0] * std::cos(angle)) - (coords[1] * std::sin(angle));
+    real y = (coords[1] * std::cos(angle)) + (coords[0] * std::sin(angle));
     coords[0] = x;
     coords[1] = y;
   }
@@ -306,8 +324,8 @@ namespace blunted {
   inline
   Vector3 Vector3::GetRotated2D(const radian angle) const {
     Vector3 result;
-    real x = (coords[0] * cos(angle)) - (coords[1] * sin(angle));
-    real y = (coords[1] * cos(angle)) + (coords[0] * sin(angle));
+    real x = (coords[0] * std::cos(angle)) - (coords[1] * std::sin(angle));
+    real y = (coords[1] * std::cos(angle)) + (coords[0] * std::sin(angle));
     result.coords[0] = x;
     result.coords[1] = y;
     result.coords[2] = coords[2];

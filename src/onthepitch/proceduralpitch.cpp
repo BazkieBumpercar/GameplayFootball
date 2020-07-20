@@ -4,6 +4,8 @@
 
 #include "proceduralpitch.hpp"
 
+#include <cmath>
+
 #include "../misc/perlin.h"
 
 #include "../gamedefines.hpp"
@@ -66,8 +68,8 @@ Uint32 GetPitchDiffuseColor(SDL_Surface *pitchSurf, float xCoord, float yCoord) 
 
   float seamlessX = ((xCoord / pitchFullHalfW) * 0.5 + 0.5) * seamlessTexW * 18.0 * texScale;
   float seamlessY = ((yCoord / pitchFullHalfH) * 0.5 + 0.5) * seamlessTexH * 12.0 * texScale;
-  seamlessX = fmod(seamlessX, seamlessTexW);
-  seamlessY = fmod(seamlessY, seamlessTexH);
+  seamlessX = std::fmod(seamlessX, seamlessTexW);
+  seamlessY = std::fmod(seamlessY, seamlessTexH);
   //printf("%f, %f - ", seamlessX, seamlessY);
   Vector3 tex = BilinearSample(seamlessTex, seamlessX, seamlessY, seamlessTexW, seamlessTexH);
   r = r * (1.0f - texMultiplier) + tex.coords[0] * texMultiplier;
@@ -103,7 +105,7 @@ Uint32 GetPitchDiffuseColor(SDL_Surface *pitchSurf, float xCoord, float yCoord) 
 
   // fake ambient occlusion
   Vector3 lightPos = Vector3(0, 0, 0);
-  float darkness = 1.0f - pow(clamp((lightPos - Vector3(xCoord / pitchHalfW, yCoord / pitchHalfH, 0)).GetLength() * 0.7f, 0.0, 1.0), 1.5f) * 0.18f;
+  float darkness = 1.0f - std::pow(clamp((lightPos - Vector3(xCoord / pitchHalfW, yCoord / pitchHalfH, 0)).GetLength() * 0.7f, 0.0, 1.0), 1.5f) * 0.18f;
   r *= darkness;
   g *= darkness;
   b *= darkness;
@@ -141,9 +143,9 @@ inline Uint32 GetPitchSpecularColor(SDL_Surface *pitchSurf, float xCoord, float 
 inline float xmod(float coord, float repeat) { return coord - repeat * floor(coord / repeat); }
 
 float GetSmoothGrassDirection(float coord, float repeat, int transitionSharpness = 5) {
-  float iteration = floor(coord / repeat);
+  float iteration = std::floor(coord / repeat);
   float bias = coord - repeat * iteration; // goes from 0 to 1 over two bands (since bands are split by being < 0.5 and > 0.5)
-  bias = sin(bias * 2 * pi) * 0.5f + 0.5f;
+  bias = std::sin(bias * 2 * pi) * 0.5f + 0.5f;
   for (int i = 0; i < transitionSharpness; i++) {
     bias = curve(bias, 1.0f);
   }

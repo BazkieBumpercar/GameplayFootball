@@ -6,8 +6,7 @@
 
 #include "../windowmanager.hpp"
 
-#include "SDL/SDL_gfxBlitFunc.h"
-#include "SDL/SDL_rotozoom.h"
+#include "SDL2/SDL2_rotozoom.h"
 
 namespace blunted {
 
@@ -104,10 +103,10 @@ namespace blunted {
     dstRect.y = 0;
     dstRect.w = 10000;
     dstRect.h = 10000;
-    SDL_gfxBlitRGBA(textOutlineSurf, NULL, surface, &dstRect);
+    SDL_BlitSurface(textOutlineSurf, NULL, surface, &dstRect);
     dstRect.x = round(outlineWidth * zoomy);
     dstRect.y = round(outlineWidth * zoomy);
-    SDL_gfxBlitRGBA(textSurf, NULL, surface, &dstRect);
+    SDL_BlitSurface(textSurf, NULL, surface, &dstRect);
     if (transparency > 0.0f) {
       sdl_setsurfacealpha(surface, (1.0f - transparency) * 255);
     }

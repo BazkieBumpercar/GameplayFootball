@@ -6,8 +6,7 @@
 
 #include "../windowmanager.hpp"
 
-#include "SDL/SDL_gfxBlitFunc.h"
-#include "SDL/SDL_rotozoom.h"
+#include "SDL2/SDL2_rotozoom.h"
 
 namespace blunted {
 
@@ -188,7 +187,7 @@ namespace blunted {
     helper.value = clamp(initialValue, 0.0f, 1.0f);
     helperValues.push_back(helper);
     return helper.index;
-    Redraw();
+    // Redraw();
   }
 
   void Gui2Slider::SetHelperValue(int index, float value) {

@@ -7,7 +7,7 @@
 
 #include "base/math/vector3.hpp"
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #include "ihidevice.hpp"
 
@@ -30,15 +30,21 @@ class HIDKeyboard : public IHIDevice {
     virtual bool GetPreviousButtonState(e_ButtonFunction buttonFunction);
     virtual Vector3 GetDirection();
 
-    void SetFunctionMapping(int index, SDLKey key) { boost::mutex::scoped_lock blah(mutex); functionMapping[index] = key; }
+    void SetFunctionMapping(int index, SDL_Keycode key) {
+      boost::mutex::scoped_lock blah(mutex);
+      functionMapping[index] = key;
+    }
 
-    SDLKey GetFunctionMapping(e_ButtonFunction buttonFunction) { boost::mutex::scoped_lock blah(mutex); return functionMapping[buttonFunction]; }
+    SDL_Keycode GetFunctionMapping(e_ButtonFunction buttonFunction) {
+      boost::mutex::scoped_lock blah(mutex);
+      return functionMapping[buttonFunction];
+    }
 
   protected:
     bool functionButtonState[e_ButtonFunction_Size];
     bool previousFunctionButtonState[e_ButtonFunction_Size];
 
-    SDLKey functionMapping[e_ButtonFunction_Size];
+    SDL_Keycode functionMapping[e_ButtonFunction_Size];
 
 };
 

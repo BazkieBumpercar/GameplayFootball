@@ -1,3 +1,16 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2014
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
@@ -44,8 +57,12 @@ namespace blunted {
       Renderer3D *renderer3D = caller->GetGraphicsScene()->GetGraphicsSystem()->GetRenderer3D();
 
       caller->texture->GetResource()->SetRenderer3D(renderer3D);
-      caller->texture->GetResource()->CreateTexture(e_InternalPixelFormat_RGBA8, (image->flags && SDL_SRCALPHA) ? e_PixelFormat_RGBA : e_PixelFormat_RGB, image->w, image->h, image->flags && SDL_SRCALPHA, false, false, false);
-      caller->texture->GetResource()->UpdateTexture(image, image->flags && SDL_SRCALPHA, false);
+    bool alpha = SDL_ISPIXELFORMAT_ALPHA((image->format->format));
+    caller->texture->GetResource()->CreateTexture(
+        e_InternalPixelFormat_RGBA8,
+        alpha ? e_PixelFormat_RGBA : e_PixelFormat_RGB, image->w, image->h,
+        alpha, false, false, false);
+    caller->texture->GetResource()->UpdateTexture(image, alpha, false);
       caller->position[0] = 0;
       caller->position[1] = 0;
       caller->size[0] = image->w;
@@ -69,14 +86,17 @@ namespace blunted {
     SDL_Surface *image = surface->GetResource()->GetData();
     assert(image);
     assert(caller->texture);
+    bool alpha = SDL_ISPIXELFORMAT_ALPHA((image->format->format));
     if (caller->size[0] != image->w || caller->size[1] != image->h) {
       // surface was resized
       caller->size[0] = image->w;
       caller->size[1] = image->h;
-      caller->texture->GetResource()->ResizeTexture(image, e_InternalPixelFormat_RGBA8, (image->flags && SDL_SRCALPHA) ? e_PixelFormat_RGBA : e_PixelFormat_RGB, image->flags && SDL_SRCALPHA, false);
+      caller->texture->GetResource()->ResizeTexture(
+        image, e_InternalPixelFormat_RGBA8,
+        alpha ? e_PixelFormat_RGBA : e_PixelFormat_RGB, alpha, false);
     } else {
       // no resize, just update
-      caller->texture->GetResource()->UpdateTexture(image, image->flags && SDL_SRCALPHA, false);
+      caller->texture->GetResource()->UpdateTexture(image, alpha, false);
     }
   }
 

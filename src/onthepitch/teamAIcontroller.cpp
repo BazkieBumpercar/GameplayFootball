@@ -1,8 +1,23 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2015
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
 
 #include "teamAIcontroller.hpp"
+
+#include <cmath>
 
 #include "AIsupport/AIfunctions.hpp"
 
@@ -10,7 +25,6 @@
 #include "match.hpp"
 
 #include "../misc/hungarian.h"
-#include "libs/fastapprox.h"
 
 #include "../main.hpp"
 
@@ -196,7 +210,8 @@ void TeamAIController::Process() {
         Player *runner = SelectAttackingRunPlayer(team);
         if (runner) {
           float distance = (runner->GetPosition() - team->GetDesignatedTeamPossessionPlayer()->GetPosition()).GetLength();
-          float distanceRating = pow(1.0f - NormalizedClamp(distance, 0, 40), 0.5f);
+          float distanceRating =
+              std::pow(1.0f - NormalizedClamp(distance, 0, 40), 0.5f);
 
           // more likely to run when there's less defenders in front
           std::vector<Player*> opponents;
@@ -205,7 +220,8 @@ void TeamAIController::Process() {
           float oppDensityRating = 1.0f;
           for (unsigned int i = 0; i < opponents.size(); i++) {
             float oppDistance = (opponents.at(i)->GetPosition() - spot).GetLength();
-            float oppDistanceRatingInv = pow(curve(1.0f - NormalizedClamp(oppDistance, 0, 15), 1.0f), 0.5f);
+            float oppDistanceRatingInv = std::pow(
+                curve(1.0f - NormalizedClamp(oppDistance, 0, 15), 1.0f), 0.5f);
             oppDensityRating -= oppDistanceRatingInv * 0.3f; // subtractive!
           }
 
@@ -384,8 +400,9 @@ Vector3 TeamAIController::GetAdaptedFormationPosition(Player *player, bool useDy
   // on own half in possession: little microfocus strength. on own half not in possession: lots of microfocus. other half: the other way around.
   float microFocusSideBias = NormalizedClamp((ballX / pitchHalfW) * -team->GetSide(), -0.7f, 0.7f); // ball on own half == lower values
   microFocusSideBias = microFocusSideBias * 0.7f + 0.3f;
-  float autoMicroFocusStrength = (pow(microFocusSideBias, 0.8f) * possessionBias +
-                                 (pow(1.0f - microFocusSideBias, 0.6f)) * (1.0f - possessionBias));
+  float autoMicroFocusStrength =
+      (std::pow(microFocusSideBias, 0.8f) * possessionBias +
+       (std::pow(1.0f - microFocusSideBias, 0.6f)) * (1.0f - possessionBias));
   microFocusStrength = microFocusStrength * (0.2f + 0.8f * autoMicroFocusStrength);
   //if (team->GetID() == 0) printf("microfocusstrength: %f\n", microFocusStrength);
 
@@ -438,7 +455,7 @@ void TeamAIController::CalculateDynamicRoles() {
       const Vector3 &playerPos = players.at(x)->GetPosition() + players.at(x)->GetMovement() * 0.5;
       const Vector3 &formationPos = adaptedFormationPositions.at(y);
       float distance = (playerPos - formationPos).GetLength();
-      distances.push_back(int(round(distance * 10)));
+      distances.push_back(int(std::round(distance * 10)));
     }
   }
 
@@ -457,7 +474,7 @@ void TeamAIController::CalculateDynamicRoles() {
         const Vector3 &playerPos = players.at(x)->GetPosition() + players.at(x)->GetMovement() * 0.5;
         const Vector3 &formationPos = adaptedFormationPositions.at(y);
         float cost = (playerPos - formationPos).GetLength();
-        int intCost = int(round(cost * 10));
+        int intCost = int(std::round(cost * 10));
         if (intCost >= distances.at(i)) intCost = 50000;
         r[x + y * playerNum] = intCost;
       }
@@ -482,7 +499,7 @@ void TeamAIController::CalculateDynamicRoles() {
     //hungarian_print_assignment(&p);
 
     bool ready = false;
-    if (totalCost < 50000 || i >= distances.size() - 5) {
+    if (totalCost != -1 && (totalCost < 50000 || i >= distances.size() - 5)) {
       //printf("total cost: %i\n", totalCost);
       // assign dynamic role with best cost
       for (unsigned int x = 0; x < playerNum; x++) {
@@ -535,8 +552,8 @@ float TeamAIController::CalculateMarkingQuality(Player *player, Player *opp) {
   float adaptedOppFromLineDistance = oppFromLineDistance;
   if (oppIsOnRightSideOfLine) adaptedOppFromLineDistance = fabs(oppFromLineDistance - 2.0f); // we put the 'best spot' a bit further away from the line
 
-  float oppFromLineDistanceFactor = fastpow(NormalizedClamp(adaptedOppFromLineDistance, 0.0f, 60.0f), 0.5f);
-  float oppOnLineDistanceFactor = fastpow(clamp( fabs(u * 2.0f - 1.0f) , 0.0f, 1.0f), 0.5f);
+  volatile float oppFromLineDistanceFactor = pow(NormalizedClamp(adaptedOppFromLineDistance, 0.0f, 60.0f), 0.5f);
+  float oppOnLineDistanceFactor = pow(clamp( fabs(u * 2.0f - 1.0f) , 0.0f, 1.0f), 0.5f);
 
   float result = 1.0f;
 

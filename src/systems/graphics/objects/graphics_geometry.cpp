@@ -1,3 +1,16 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2014
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
@@ -72,8 +85,9 @@ namespace blunted {
         bool repeat = true;
         bool mipmaps = true;
         bool bilinear = true;
-        diffuseTexture->GetResource()->CreateTexture((image->flags && SDL_SRCALPHA) ? e_InternalPixelFormat_SRGBA8 : e_InternalPixelFormat_SRGB8, (image->flags && SDL_SRCALPHA) ? e_PixelFormat_RGBA : e_PixelFormat_RGB, image->w, image->h, image->flags && SDL_SRCALPHA, repeat, mipmaps, bilinear);
-        diffuseTexture->GetResource()->UpdateTexture(image, image->flags && SDL_SRCALPHA, true);
+        bool alpha = SDL_ISPIXELFORMAT_ALPHA((image->format->format));
+        diffuseTexture->GetResource()->CreateTexture(alpha ? e_InternalPixelFormat_SRGBA8 : e_InternalPixelFormat_SRGB8, alpha ? e_PixelFormat_RGBA : e_PixelFormat_RGB, image->w, image->h, alpha, repeat, mipmaps, bilinear);
+        diffuseTexture->GetResource()->UpdateTexture(image, alpha, true);
         surface->resourceMutex.unlock();
       }
     }

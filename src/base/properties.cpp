@@ -1,3 +1,16 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2014
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
@@ -18,14 +31,13 @@ namespace blunted {
   std::string Properties::emptyString = "";
 
   Properties::Properties() {
-    cacheString.reserve(256);
   }
 
   Properties::~Properties() {
   }
 
   bool Properties::Exists(const char *name) const {
-    map_Properties::const_iterator iter = properties.find(name);
+    auto iter = properties.find(std::string(name));
     if (iter == properties.end()) {
       return false;
     } else {
@@ -34,11 +46,12 @@ namespace blunted {
   }
 
   void Properties::Set(const char *name, const std::string &value) {
-    std::pair <map_Properties::iterator, bool> result = properties.insert(map_Properties::value_type(name, value));
-    if (result.second == false) {
-      // property already exists, replace its value
-      result.first->second = value;
+    properties[std::string(name)] = value;
     }
+
+  void Properties::SetInt(const char *name, int value) {
+    std::string value_str = int_to_str(value);
+    Set(name, value_str);
   }
 
   void Properties::Set(const char *name, real value) {
@@ -52,8 +65,7 @@ namespace blunted {
   }
 
   const std::string &Properties::Get(const char *name, const std::string &defaultValue) const {
-    cacheString.assign(name);
-    map_Properties::const_iterator iter = properties.find(cacheString);
+    auto iter = properties.find(std::string(name));
     if (iter == properties.end()) {
       return defaultValue;
     } else {
@@ -62,8 +74,7 @@ namespace blunted {
   }
 
   bool Properties::GetBool(const char *name, bool defaultValue) const {
-    cacheString.assign(name);
-    map_Properties::const_iterator iter = properties.find(cacheString);
+    auto iter = properties.find(std::string(name));
     if (iter == properties.end()) {
       return defaultValue;
     } else {
@@ -72,8 +83,7 @@ namespace blunted {
   }
 
   real Properties::GetReal(const char *name, real defaultValue) const {
-    cacheString.assign(name);
-    map_Properties::const_iterator iter = properties.find(cacheString);
+    auto iter = properties.find(std::string(name));
     if (iter == properties.end()) {
       return defaultValue;
     } else {
@@ -82,8 +92,7 @@ namespace blunted {
   }
 
   int Properties::GetInt(const char *name, int defaultValue) const {
-    cacheString.assign(name);
-    map_Properties::const_iterator iter = properties.find(cacheString);
+    auto iter = properties.find(std::string(name));
     if (iter == properties.end()) {
       return defaultValue;
     } else {
@@ -107,10 +116,7 @@ namespace blunted {
     map_Properties::const_iterator iter = userpropdata->begin();
 
     while (iter != userpropdata->end()) {
-      std::pair <map_Properties::iterator, bool> result = properties.insert(map_Properties::value_type(iter->first, iter->second));
-      if (result.second == false) {
-        Log(e_Warning, "Properties", "AddProperties", "property " + iter->first + " already defined");
-      }
+      properties[iter->first] = iter->second;
       iter++;
     }
   }
@@ -120,10 +126,7 @@ namespace blunted {
     map_Properties::const_iterator iter = userpropdata->begin();
 
     while (iter != userpropdata->end()) {
-      std::pair <map_Properties::iterator, bool> result = properties.insert(map_Properties::value_type(iter->first, iter->second));
-      if (result.second == false) {
-        Log(e_Warning, "Properties", "AddProperties", "property " + iter->first + " already defined");
-      }
+      properties[iter->first] = iter->second;
       iter++;
     }
   }

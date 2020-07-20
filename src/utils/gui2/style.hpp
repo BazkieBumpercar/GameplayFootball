@@ -5,7 +5,7 @@
 #ifndef _HPP_GUI2_STYLE
 #define _HPP_GUI2_STYLE
 
-#include "SDL/SDL_ttf.h"
+#include "SDL2/SDL_ttf.h"
 #include "base/math/vector3.hpp"
 
 namespace blunted {

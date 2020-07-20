@@ -539,7 +539,7 @@ void Match::RandomizeAdboards(boost::intrusive_ptr<Node> stadiumNode) {
     Log(e_Notice, "Match", "RandomizeAdboards", "loading adboard file " + files.at(i));
     adboardSurfaces.push_back(ResourceManagerPool::GetInstance().GetManager<Surface>(e_ResourceType_Surface)->Fetch(files.at(i)));
   }
-  if (Verbose()) printf("%i adboards loaded (out of %i files)\n", adboardSurfaces.size(), files.size());
+  if (Verbose()) printf("%lu adboards loaded (out of %lu files)\n", adboardSurfaces.size(), files.size());
   if (adboardSurfaces.empty()) return;
 
 
@@ -547,7 +547,7 @@ void Match::RandomizeAdboards(boost::intrusive_ptr<Node> stadiumNode) {
 
   std::list < boost::intrusive_ptr<Geometry> > stadiumGeoms;
   stadiumNode->GetObjects<Geometry>(e_ObjectType_Geometry, stadiumGeoms, true);
-  if (Verbose()) printf("number of stadium objects: %i\n", stadiumGeoms.size());
+  if (Verbose()) printf("number of stadium objects: %lu\n", stadiumGeoms.size());
 
 
   // replace

@@ -17,6 +17,7 @@
 #include "utils/gui2/widgets/capturekey.hpp"
 
 #include "../hid/ihidevice.hpp"
+#include "SDL2/SDL_keycode.h"
 
 using namespace blunted;
 
@@ -83,7 +84,7 @@ class KeyboardPage : public Gui2Page {
     void SetKeyDone(int buttonID);
 
   protected:
-    SDLKey keyIDs[18];
+    SDL_Keycode keyIDs[18];
     Gui2Button *keyButtons[18];
 
     Gui2Image *bg;

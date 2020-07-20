@@ -4,6 +4,8 @@
 
 #include "matrix4.hpp"
 
+#include <cmath>
+
 namespace blunted {
 
   Matrix4::Matrix4() {
@@ -150,9 +152,11 @@ namespace blunted {
     /* calculate determinant */
     det=src[0]*dst[0]+src[1]*dst[1]+src[2]*dst[2]+src[3]*dst[3];
     /* calculate matrix inverse */
-    det = 1/det;
-    for (int j = 0; j < 16; j++)
-        dst[j] *= det;
+    if (det != 0.0f) {
+      det = 1/det;
+      for (int j = 0; j < 16; j++)
+          dst[j] *= det;
+    }
 
     Matrix4 tmpm(dst);
     return tmpm;
@@ -291,7 +295,7 @@ namespace blunted {
 
     // https://solarianprogrammer.com/2013/05/22/opengl-101-matrices-projection-view-model/
 
-    float top = zNear * tan(fov * (pi / 360.0f));
+    float top = zNear * std::tan(fov * (pi / 360.0f));
     float bottom = -top;
     float right = top * aspect;
     float left = -right;//bottom * aspect;

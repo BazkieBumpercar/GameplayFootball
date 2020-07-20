@@ -1,8 +1,22 @@
+// Copyright 2019 Google LLC & Bastiaan Konings
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // written by bastiaan konings schuiling 2008 - 2015
 // this work is public domain. the code is undocumented, scruffy, untested, and should generally not be used for anything important.
 // i do not offer support, so don't ask. to be used for inspiration :)
 
 #include "playercontroller.hpp"
+#include <cmath>
 
 #include "../../match.hpp"
 #include "../../team.hpp"
@@ -13,8 +27,6 @@
 #include "../../AIsupport/AIfunctions.hpp"
 
 #include "../../../main.hpp"
-
-#include "libs/fastapprox.h"
 
 PlayerController::PlayerController(Match *match) : IController(match) {
   Reset();
@@ -418,11 +430,17 @@ void PlayerController::_MovementCommand(PlayerCommandQueue &commandQueue, bool f
   float manualVelocityFloat = inputVelocityFloat;
 
   Vector3 defaultLookDirection = manualDirection;
-  float desiredVeloFactor = 1.0f - pow(NormalizedClamp(std::min(inputVelocityFloat, player->GetFloatVelocity()), idleDribbleSwitch, sprintVelocity), 0.5f) * 0.3f;
+  float desiredVeloFactor =
+      1.0f - std::pow(NormalizedClamp(std::min(inputVelocityFloat,
+                                               player->GetFloatVelocity()),
+                                      idleDribbleSwitch, sprintVelocity),
+                      0.5f) *
+                 0.3f;
   Vector3 focusPos = _mentalImage->GetBallPrediction(defaultLookAtTime_ms).Get2D();
   focusPos += player->GetDirectionVec() * 0.5f; // to keep looking forward if ball is very close
   radian toFocusAngle = (focusPos - player->GetPosition()).GetNormalized(manualDirection).GetAngle2D(manualDirection);
-  defaultLookDirection = manualDirection.GetRotated2D(toFocusAngle * pow(desiredVeloFactor, 0.7f));
+  defaultLookDirection = manualDirection.GetRotated2D(
+      toFocusAngle * std::pow(desiredVeloFactor, 0.7f));
 
   command.desiredDirection = manualDirection;
   command.desiredVelocityFloat = manualVelocityFloat;
@@ -485,14 +503,21 @@ void PlayerController::_MovementCommand(PlayerCommandQueue &commandQueue, bool f
         sameDirFactor = sameDirFactor * 0.5f + 0.5f; // todo: can't fully trust this; it just isn't a 100% indication of the player's intentions. just use this hax for now
         autoBias = 0.0f;
         if (CastPlayer()->GetLastTouchBias(2000) > 0.01f) {
-          if (CastPlayer()->GetTimeNeededToGetToBall_ms() < 1700) autoBias = pow(CastPlayer()->GetLastTouchBias(2000), 0.4f) * pow(sameDirFactor, 0.5f);
+          if (CastPlayer()->GetTimeNeededToGetToBall_ms() < 1700)
+            autoBias = std::pow(CastPlayer()->GetLastTouchBias(2000), 0.4f) *
+                       std::pow(sameDirFactor, 0.5f);
         }
         if (!oppTeamHasPossession) {
           if (team->IsHumanControlled(player->GetID())) {
             float magnetBias = std::max(curve(sameDirFactor, 0.8f), powf(GetLastSwitchBias(), 0.5f)); // needed for when we get passed a ball while we are not the designated player. we want to at least try to get there.
             magnetBias *= 1.0f - inputDirIsOwnHalfFactor; // if we run for our own half, don't accidentally magnet somewhere
             // assumes possessionAmount > 0.5f (see 'if' clause above)
-            autoBias = clamp(pow((possessionAmount - 0.5f) * 2.0f, 0.5f) * magnetBias, autoBias, 1.0f);
+
+            autoBias =
+                clamp(std::pow((std::max(possessionAmount, 0.5f) - 0.5f) * 2.0f,
+                               0.5f) *
+                          magnetBias,
+                      autoBias, 1.0f);
           }
         }
         if (forceMagnet) {
@@ -538,7 +563,9 @@ void PlayerController::_MovementCommand(PlayerCommandQueue &commandQueue, bool f
       // when farther away from ball/opp, get towards ball/opp, when already close, mimic opponent's movement (sort of an auto 'man marking' thing)
       if (autoBias > 0.0f) {
         float playerOppDistance = (oppPos - player->GetPosition()).GetLength();
-        float manMarkingBias = pow(1.0f - curve(NormalizedClamp(playerOppDistance, 0.0f, 7.0f), 0.7f), 1.2f);
+        float manMarkingBias = std::pow(
+            1.0f - curve(NormalizedClamp(playerOppDistance, 0.0f, 7.0f), 0.7f),
+            1.2f);
 
         Vector3 autoDirection_manMarking = oppImage.movement.GetNormalized(inputDirection);
         float autoVelocityFloat_manMarking = oppImage.velocity;
@@ -592,7 +619,12 @@ void PlayerController::_CalculateSituation() {
 
   // when ball is close, don't fade possession bias (so we can take immediate action)
   if (hasBestChanceOfPossession) {
-    float distanceBias = pow(NormalizedClamp((match->GetBall()->Predict(300).Get2D() - player->GetPosition()).GetLength(), 2.0f, 14.0f), 2.0f);
+    float distanceBias = std::pow(
+        NormalizedClamp(
+            (match->GetBall()->Predict(300).Get2D() - player->GetPosition())
+                .GetLength(),
+            2.0f, 14.0f),
+        2.0f);
     fadingTeamPossessionAmount = fadingTeamPossessionAmount * distanceBias + teamPossessionAmount * (1.0f - distanceBias);
   }
 

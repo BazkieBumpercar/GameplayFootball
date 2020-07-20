@@ -363,29 +363,19 @@ set(BLUNTED_CORE_SOURCES
         src/blunted.cpp
         )
 
-set(LIBS_FASTEVENTS_HEADERS
-        src/libs/fastevents/SDLUtils.h
-        src/libs/fastevents/trace.h
-        src/libs/fastevents/fastevents.h
-        src/libs/fastevents/queue.h
-        )
-
 set(LIBS_SQLITE3_HEADERS
         src/libs/sqlite3/sqlite3ext.h
         src/libs/sqlite3/sqlite3.h
         )
 
 set(LIBS_HEADERS
-        src/libs/fastapprox.h
+
         )
 
-set(ALL_LIBS_HEADERS ${LIBS_HEADERS} ${LIBS_FASTEVENTS_HEADERS}
+set(ALL_LIBS_HEADERS ${LIBS_HEADERS}
         ${LIBS_SQLITE3_HEADERS})
 
 set(LIBS_SOURCES
-        src/libs/fastevents/fastevents.c
-        src/libs/fastevents/trace.c
-        src/libs/fastevents/SDLUtils.c
         src/libs/sqlite3/sqlite3.c
         )
 
