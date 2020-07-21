@@ -1,20 +1,42 @@
-# Gameplay Football
-Football game, discontinued
+## Gameplay Football
+Football game, a fork of discontinued [GameplayFootball]() written by [Bastiaan Konings Schuiling](http://www.properlydecent.com/).
 
-In short, this game has pretty good potential gameplay-wise, but has architectural problems regarding the code. I would advise you *not* to continue development, but rather use the source as inspiration for your own game. There's some pretty useful excerpts of code in there that may help you develop your sportsball game!
-Another thing, this game uses my own multithreaded game engine (Blunted2), and no matter how cool that may sound, using a badly tested and undocumented engine just slows down development. Besides, a football game doesn't need to be *that* multithreaded, it just needlessly complicates things.
+In 2019, Google Brain team picked up a game and created a Reinforcement Learning environment based on it - [Google Research Football](https://github.com/google-research/football). They made some improvements to the game, updated the libraries, but threw away everything (e.g. menus) that was not necessary for their task.
 
-- I don't offer support for this, so enjoy it but leave me alone ;)
-- Project dir .tar.gz including images, models and such is located at http://properlydecent.com/data/gameplayfootball/
-- This game uses my game engine Blunted2, which you can find here https://github.com/BazkieBumpercar/Blunted2
-- Compiling can be a beeyatch, regarding includes/libs and such. I'm always having trouble with that too (as you can see from my messy Makefiles), so you're on your own here, just fiddle around until it works :P *EDIT, thanks to Farrer, there's now a set of CMAKE files to help you with compilation!*
-- You can download the public beta binary from my website @ http://properlydecent.com
+The goal of this repository is to update the existing code, based on Google Brain's changes (see `google_brain` branch) and other forks, and make it compiling and running on as many platforms as possible. PRs are always welcome.  
+
+## Building from source
+
+### Linux
+Install required dependencies: 
+```bash
+sudo apt-get install git cmake build-essential libgl1-mesa-dev libsdl2-dev \
+libsdl2-image-dev libsdl2-ttf-dev libsdl2-gfx-dev libopenal-dev libboost-all-dev \
+libdirectfb-dev libst-dev mesa-utils xvfb x11vnc python3-pip
+```
+
+Run the following commands:
+```bash
+# Clone the repository
+git clone https://github.com/vi3itor/GameplayFootball.git
+cd GameplayFootball
+
+# Copy the contents of `data` directory into `build`
+cp -R data/. build
+
+# Go to `build` directory
+cd build
+# Generate Makefile
+cmake ..
+# Compile the game
+make -j$(nproc)
+```
+
+Run the game:
+```bash
+./gameplayfootball
+```
 
 
-I may add some in-depth explanations about various interesting pieces of code in this project later on, in this very readme.
-Enjoy!
-
-## Donate
-Consider a donation to my Bitcoin address 1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t
-
-Thank you :)
+### Donate
+If you want to thank Bastiaan for his great work, consider a donation to his Bitcoin address 1JHnTe2QQj8RL281fXFiyvK9igj2VhPh2t
