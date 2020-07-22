@@ -21,7 +21,7 @@
 #include "interface_renderer3d.hpp"
 
 #ifdef __linux__
-#include <GL/glxew.h>
+#include <GL/gl.h>
 #endif
 
 #include <SDL2/SDL_image.h>

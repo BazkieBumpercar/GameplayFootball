@@ -23,13 +23,12 @@ if(UNIX)
    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-variable -Wno-sign-compare -Wno-unused-function -Wno-unused-but-set-variable -Wno-strict-aliasing")
    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -O3")
 endif(UNIX)
+# SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS} -fPIC -g -O3")
+# SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fPIC -O3 -g")
 
 # Find required libraries
 FIND_PACKAGE(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
-
-FIND_PACKAGE(GLEW REQUIRED)
-include_directories(${GLEW_INCLUDE_DIRS})
 
 FIND_PACKAGE(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
@@ -99,7 +98,7 @@ add_library(datalib ${DATA_SOURCES} ${DATA_HEADERS})
 set(LIBRARIES gamelib hidlib menulib datalib leaguelib blunted2
    ${Boost_LIBRARIES}
    ${SDL2_IMAGE_LIBRARIES} ${SDL2_TTF_LIBRARIES} ${SDL2_GFX_LIBRARIES}
-   ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} dl m ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+   ${SDL2_LIBRARIES} ${OPENAL_LIBRARY} dl m ${OPENGL_LIBRARIES})
 
 add_executable(gameplayfootball WIN32 ${CORE_SOURCES} ${CORE_HEADERS})
 target_link_libraries(gameplayfootball ${LIBRARIES})
