@@ -18,6 +18,8 @@
 #include "opengl_renderer3d.hpp"
 
 #include <GL/gl.h>
+
+#include <cmath>
 #include <SDL2/SDL.h>
 
 #include "base/log.hpp"
@@ -63,17 +65,6 @@ struct GLfunctions {
 
   void OpenGLRenderer3D::SwapBuffers() {
     SDL_GL_SwapWindow(window);
-  }
-
-  void OpenGLRenderer3D::LoadMatrix(const Matrix4 &mat) {
-    mapping.glLoadMatrixf((float*)mat.GetTransposed().elements);
-  }
-
-  Matrix4 OpenGLRenderer3D::GetMatrix(e_MatrixMode matrixMode) const {
-    float the_matrix[16];
-    if (matrixMode == e_MatrixMode_Projection) mapping.glGetFloatv(GL_PROJECTION_MATRIX, the_matrix);
-    if (matrixMode == e_MatrixMode_ModelView) mapping.glGetFloatv(GL_MODELVIEW_MATRIX, the_matrix);
-    return Matrix4(the_matrix).GetTransposed();
   }
 
   void OpenGLRenderer3D::SetMatrix(const std::string &shaderUniformName, const Matrix4 &matrix) {

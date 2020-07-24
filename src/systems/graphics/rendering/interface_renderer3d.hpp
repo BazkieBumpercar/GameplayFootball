@@ -208,8 +208,6 @@ namespace blunted {
 
       virtual void SwapBuffers() = 0;
 
-      virtual void LoadMatrix(const Matrix4 &mat) = 0; // TO BE DEPRECATED
-      virtual Matrix4 GetMatrix(e_MatrixMode matrixMode) const = 0; // TO BE DEPRECATED
       virtual void SetMatrix(const std::string &shaderUniformName, const Matrix4 &matrix) = 0;
 
       virtual void RenderOverlay2D(const std::vector<Overlay2DQueueEntry> &overlay2DQueue) = 0;

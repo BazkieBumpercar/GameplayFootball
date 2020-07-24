@@ -20,11 +20,6 @@
 
 #include "interface_renderer3d.hpp"
 
-#ifdef __linux__
-#include <GL/gl.h>
-#endif
-
-#include <SDL2/SDL_image.h>
 #ifdef WIN32
 #include <SDL2/SDL_syswm.h>
 #endif
@@ -39,10 +34,6 @@ namespace blunted {
 
       virtual void SwapBuffers();
 
-      //virtual void SetMatrixMode(e_MatrixMode matrixMode); // TO BE DEPRECATED
-      //virtual void IdentityMatrix(); // TO BE DEPRECATED
-      virtual void LoadMatrix(const Matrix4 &mat); // TO BE DEPRECATED
-      virtual Matrix4 GetMatrix(e_MatrixMode matrixMode) const; // TO BE DEPRECATED
       virtual void SetMatrix(const std::string &shaderUniformName, const Matrix4 &matrix);
 
       virtual void RenderOverlay2D(const std::vector<Overlay2DQueueEntry> &overlay2DQueue);
@@ -154,14 +145,14 @@ namespace blunted {
 
       float overallBrightness;
 
-      GLfloat largest_supported_anisotropy;
+      float largest_supported_anisotropy;
 
-      std::map<std::string, GLint> uniformCache;
+      std::map<std::string, int> uniformCache;
 
       std::map<int, int> VBOPingPongMap;
       std::map<int, int> VAOPingPongMap;
       std::map<int, int> VAOReadIndex;
-      std::map<int, GLsync> VAOfence;
+      //std::map<int, GLsync> VAOfence;
 
       signed int _cache_activeTextureUnit;
 
