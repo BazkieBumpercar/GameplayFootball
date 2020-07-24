@@ -18,6 +18,7 @@
 #include "opengl_renderer3d.hpp"
 
 #include <GL/gl.h>
+//#include <GL/glcorearb.h>  // can be used to check for core profile only
 
 #include <cmath>
 #include <SDL2/SDL.h>
@@ -61,6 +62,8 @@ struct GLfunctions {
   };
 
   OpenGLRenderer3D::~OpenGLRenderer3D() {
+    DeleteSimpleVertexBuffer(overlayBuffer);
+    DeleteSimpleVertexBuffer(quadBuffer);
   };
 
   void OpenGLRenderer3D::SwapBuffers() {
@@ -76,72 +79,43 @@ struct GLfunctions {
 
     assert(context);
 
-    // todo: use shaders maybe? (not sure if use of compat. context slows things down)
-
-
-    mapping.glMatrixMode(GL_PROJECTION);
-    mapping.glPushMatrix();
-    mapping.glLoadIdentity();
-    // VK: TODO: check window size instead?
-    mapping.glOrtho(0, context_width, context_height, 0, 0.1, 10);
-
-    mapping.glMatrixMode(GL_MODELVIEW);
-    mapping.glPushMatrix();
-    mapping.glLoadIdentity();
-    mapping.glTranslatef(0, 0, -1);
+    if (overlay2DQueue.empty()) {
+      return;
+    }
 
     mapping.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     mapping.glEnable(GL_BLEND);
-
     mapping.glDisable(GL_DEPTH_TEST);
     SetDepthMask(false);
-    mapping.glShadeModel(GL_FLAT);
-    mapping.glDisable(GL_FOG);
     mapping.glDisable(GL_CULL_FACE);
-    mapping.glDisable(GL_LIGHTING);
 
-    mapping.glEnable(GL_TEXTURE_2D);
+    UseShader("overlay");
+
+    // VK: TODO: check window size instead?
+    Matrix4 orthoMatrix = CreateOrthoMatrix(0, context_width, context_height, 0, 0.1, 10);
+    SetMatrix("projection", orthoMatrix);
+
+    mapping.glBindVertexArray(overlayBuffer.vertexArrayID);
+    SetTextureUnit(0);
 
     for (unsigned int i = 0; i < overlay2DQueue.size(); i++) {
-      const Overlay2DQueueEntry &queueEntry = overlay2DQueue.at(i);
+      const Overlay2DQueueEntry &queueEntry = overlay2DQueue[i];
 
-      /* fun!
-      float xf = (context->w * 1.0) / 2.0 - 128  + sin(i       + i2 * 1.2) * 200  + sin(i * 0.4 + i2 * 0.6) * 100;
-      float yf = (context->h * 1.0) / 2.0 - 32   + cos(i * 0.7 + i2 * 0.7) * 160  + cos(i * 0.6 + i2 * 1.3) * 80;
-      i2 += 0.15 - (i2 * 0.01);
-      */
+      Matrix4 modelMatrix(MATRIX4_IDENTITY);
+      modelMatrix.SetTranslation(Vector3(queueEntry.position[0], queueEntry.position[1], -1.0f));
+      modelMatrix.SetScale(Vector3(queueEntry.size[0], queueEntry.size[1], 1.0f));
+      SetMatrix("model", modelMatrix);
 
-      mapping.glBindTexture(GL_TEXTURE_2D, queueEntry.texture->GetResource()->GetID());
-
-      mapping.glBegin(GL_QUADS);
-
-      mapping.glTexCoord3f(0, 0, 0);
-      mapping.glVertex2f(queueEntry.position[0]                     , queueEntry.position[1]);
-      mapping.glTexCoord3f(1, 0, 0);
-      mapping.glVertex2f(queueEntry.position[0] + queueEntry.size[0], queueEntry.position[1]);
-      mapping.glTexCoord3f(1, 1, 0);
-      mapping.glVertex2f(queueEntry.position[0] + queueEntry.size[0], queueEntry.position[1] + queueEntry.size[1]);
-      mapping.glTexCoord3f(0, 1, 0);
-      mapping.glVertex2f(queueEntry.position[0]                     , queueEntry.position[1] + queueEntry.size[1]);
-
-      mapping.glEnd();
+      BindTexture(queueEntry.texture->GetResource()->GetID());
+      mapping.glDrawArrays(GL_TRIANGLES, 0, 6);
     }
+
+    mapping.glBindVertexArray(0);
 
     mapping.glEnable(GL_DEPTH_TEST);
     mapping.glEnable(GL_CULL_FACE);
-    mapping.glShadeModel(GL_SMOOTH);
     SetDepthMask(true);
-
     mapping.glDisable(GL_BLEND);
-
-    mapping.glPopMatrix();
-
-    mapping.glMatrixMode(GL_PROJECTION);
-    mapping.glPopMatrix();
-
-    mapping.glMatrixMode(GL_MODELVIEW);
-
-    mapping.glLoadIdentity();
   }
 
   void OpenGLRenderer3D::RenderOverlay2D() {
@@ -153,29 +127,15 @@ struct GLfunctions {
     viewMatrix.SetTranslation(Vector3(0, 0, -0.5f));
     SetMatrix("orthoViewMatrix", viewMatrix);
 
-
-    mapping.glShadeModel(GL_FLAT);
-    mapping.glDisable(GL_LIGHTING);
-
     SetCullingMode(e_CullingMode_Off);
 
-    mapping.glEnable(GL_TEXTURE_2D);
     SetTextureUnit(4); // noise
     BindTexture(noiseTexID);
     SetTextureUnit(0);
 
-    mapping.glBegin(GL_QUADS);
-
-    mapping.glTexCoord3f(0, 1, 0);
-    mapping.glVertex2f(-1, 1);
-    mapping.glTexCoord3f(1, 1, 0);
-    mapping.glVertex2f(1, 1);
-    mapping.glTexCoord3f(1, 0, 0);
-    mapping.glVertex2f(1, -1);
-    mapping.glTexCoord3f(0, 0, 0);
-    mapping.glVertex2f(-1, -1);
-
-    mapping.glEnd();
+    mapping.glBindVertexArray(quadBuffer.vertexArrayID);
+    mapping.glDrawArrays(GL_TRIANGLES, 0, 6);
+    mapping.glBindVertexArray(0);
 
     // unbind noise
     SetTextureUnit(4);
@@ -185,6 +145,10 @@ struct GLfunctions {
   }
 
   void drawSphere(float r, int lats, int longs) {
+  // Never called (because light.type is always set to 0) and uses deprecated methods.
+  // Possible implementation, that uses modern OpenGl can be found here:
+  // https://gist.github.com/zwzmzd/0195733fa1210346b00d
+  /*
     int i, j;
     for (i = 0; i <= lats; i++) {
       float lat0 = pi * (-0.5 + (float) (i - 1) / lats);
@@ -208,12 +172,11 @@ struct GLfunctions {
       }
       mapping.glEnd();
     }
+   */
   }
 
   void OpenGLRenderer3D::RenderLights(std::deque<LightQueueEntry> &lightQueue, const Matrix4 &projectionMatrix, const Matrix4 &viewMatrix) {
     Vector3 cameraPos = viewMatrix.GetInverse().GetTranslation();
-
-    mapping.glDisable(GL_ALPHA_TEST);
 
     SetUniformFloat3(currentShader->first, "cameraPosition", cameraPos.coords[0], cameraPos.coords[1], cameraPos.coords[2]);
 
@@ -228,7 +191,6 @@ struct GLfunctions {
       SetUniformInt(currentShader->first, "has_shadow", (int)light.hasShadow);
       if (light.hasShadow) {
         SetTextureUnit(7);
-        mapping.glEnable(GL_TEXTURE_2D);
         mapping.glBindTexture(GL_TEXTURE_2D, light.shadowMapTexture->GetResource()->GetID());
 
         Matrix4 toTexCoords(MATRIX4_IDENTITY);
@@ -236,8 +198,6 @@ struct GLfunctions {
         toTexCoords.SetScale(Vector3(0.5f, 0.5f, 0.5f));
         SetUniformMatrix4(currentShader->first, "lightViewProjectionMatrix", toTexCoords * (*lightIter).lightProjectionMatrix * (*lightIter).lightViewMatrix);
 
-      } else {
-        mapping.glDisable(GL_TEXTURE_2D);
       }
 
       SetUniformFloat3(currentShader->first, "lightColor", light.color.coords[0], light.color.coords[1], light.color.coords[2]);
@@ -247,7 +207,8 @@ struct GLfunctions {
       int quad_or_sphere = 1;
       if (light.type == 0) {
 
-        quad_or_sphere = 0; // directional light: visible anyway, everywhere. draw fullscreen quad
+      quad_or_sphere = 0;  // directional light: visible anyway, everywhere.
+                           // draw fullscreen quad
 
       } else if (light.type == 1) { // sphere
         AABB aabb = light.aabb;
@@ -278,21 +239,10 @@ struct GLfunctions {
         Matrix4 modelMatrix(MATRIX4_IDENTITY);
         SetMatrix("modelMatrix", modelMatrix);
 
-        mapping.glBegin(GL_QUADS);
-
-        mapping.glTexCoord3f(0, 1, 0);
-        mapping.glVertex2f(-1, 1);
-        mapping.glTexCoord3f(1, 1, 0);
-        mapping.glVertex2f(1, 1);
-        mapping.glTexCoord3f(1, 0, 0);
-        mapping.glVertex2f(1, -1);
-        mapping.glTexCoord3f(0, 0, 0);
-        mapping.glVertex2f(-1, -1);
-
-        mapping.glEnd();
-
-      } else {
-
+      mapping.glBindVertexArray(quadBuffer.vertexArrayID);
+      mapping.glDrawArrays(GL_TRIANGLES, 0, 6);
+      mapping.glBindVertexArray(0);
+    } else {  // Never called (because light.type is always set to 0)
         // SPHERE
 
         SetCullingMode(e_CullingMode_Back);
@@ -310,7 +260,6 @@ struct GLfunctions {
 
       if (light.hasShadow) {
         mapping.glBindTexture(GL_TEXTURE_2D, 0);
-        mapping.glDisable(GL_TEXTURE_2D);
         SetTextureUnit(0);
       }
 
@@ -324,6 +273,62 @@ struct GLfunctions {
 
 
   // init & exit
+
+  VertexBufferID OpenGLRenderer3D::CreateSimpleVertexBuffer(GLfloat *vertices, unsigned int size) {
+    GLuint VBO, VAO;
+    mapping.glGenVertexArrays(1, &VAO);
+    mapping.glGenBuffers(1, &VBO);
+
+    mapping.glBindVertexArray(VAO);
+
+    mapping.glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    mapping.glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+
+    mapping.glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+    mapping.glEnableVertexAttribArray(0);
+
+    mapping.glBindBuffer(GL_ARRAY_BUFFER, 0);
+    mapping.glBindVertexArray(0);
+
+    VertexBufferID vertexBufferId;
+    vertexBufferId.bufferID = VBO;
+    vertexBufferId.vertexArrayID = VAO;
+    return vertexBufferId;
+  }
+
+  void OpenGLRenderer3D::DeleteSimpleVertexBuffer(VertexBufferID vertexBufferID) {
+    GLuint glVertexBufferID = vertexBufferID.bufferID;
+    mapping.glDeleteBuffers(1, &glVertexBufferID);
+
+    GLuint glVertexArrayID = vertexBufferID.vertexArrayID;
+    mapping.glDeleteVertexArrays(1, &glVertexArrayID);
+  }
+
+// This method was introduced to replace OpenGL's fixed function pipeline
+// (e.g. glBegin, glEnd, etc.) that was used for overlay rendering.
+  void OpenGLRenderer3D::InitializeOverlayAndQuadBuffers() {
+    GLfloat overlayVertices[] = {
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.0f, 1.0f
+    };
+    overlayBuffer = CreateSimpleVertexBuffer(overlayVertices, sizeof(overlayVertices));
+
+    GLfloat quadVertices[] = {
+        -1.0f,  1.0f, 0.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 1.0f,
+
+        -1.0f,  1.0f, 0.0f, 1.0f,
+        1.0f,  1.0f, 0.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f
+    };
+    quadBuffer = CreateSimpleVertexBuffer(quadVertices, sizeof(quadVertices));
+  }
 
   bool OpenGLRenderer3D::CreateContext(int width, int height, int bpp, bool fullscreen) {
     this->context_width = width;
@@ -340,6 +345,7 @@ struct GLfunctions {
 // #endif
 
 //#ifdef WIN32
+    // SDL subsystems must be initialized before setting attributes
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -413,6 +419,8 @@ struct GLfunctions {
     if (!higherThan32) Log(e_Warning, "OpenGLRenderer3D", "CreateContext", "OpenGL version not equal to or higher than 3.2 (or not reported as such)");
 
 #ifdef WIN32
+    // VK: TODO check if centering is still required with SDL2
+    /*
     SDL_VERSION(&wmInfo.version);
     if (SDL_GetWMInfo(&wmInfo)) {
 
@@ -450,6 +458,7 @@ struct GLfunctions {
       //HDC hDC = GetDC(wmInfo.window);
       //wglMakeCurrent(hDC, wmInfo.hglrc);
     }
+     */
 #endif
 
 #ifdef WIN32
@@ -459,12 +468,7 @@ struct GLfunctions {
 #endif
 
 #ifdef __linux__
-//    GLenum err = glewInit();
-//    if (GLEW_OK != err) {
-//      std::string errorString =  (char*) glewGetErrorString(err);
-//      Log(e_FatalError, "OpenGLRenderer3D", "CreateContext", errorString);
-//    }
-
+    // VK TODO: investigate it
     bool success = false;//glXSwapIntervalSGI(-1); // anti-tear blah
     //if (!success) mapping.glXSwapIntervalSGI(1);
     //if (!success) printf("ANTI TEAR NOT SUPPORTED\n\n\n\n\n");
@@ -476,18 +480,16 @@ struct GLfunctions {
     mapping.glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &largest_supported_anisotropy);
     //largest_supported_anisotropy = clamp(largest_supported_anisotropy, 0, 8); // don't overdo it
 
-    mapping.glDisable(GL_LIGHTING);
 
-    GLfloat color[4] = { 0, 0, 0, 0 };
-    mapping.glMaterialfv(GL_FRONT, GL_SPECULAR, color);
-    mapping.glMateriali(GL_FRONT, GL_SHININESS, 80);
+    //GLfloat color[4] = { 0, 0, 0, 0 };
+    //mapping.glMaterialfv(GL_FRONT, GL_SPECULAR, color);
+    //mapping.glMateriali(GL_FRONT, GL_SHININESS, 80);
 
     // enable color tracking
-    mapping.glEnable(GL_COLOR_MATERIAL);
-    mapping.glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    //mapping.glEnable(GL_COLOR_MATERIAL);
+    //mapping.glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
     mapping.glDisable(GL_MULTISAMPLE);
-
     mapping.glCullFace(GL_BACK);
 
 
@@ -498,6 +500,7 @@ struct GLfunctions {
     LoadShader("ambient", "media/shaders/ambient");
     LoadShader("zphase", "media/shaders/zphase");
     LoadShader("postprocess", "media/shaders/postprocess");
+    LoadShader("overlay", "media/shaders/overlay");
 
     currentShader = shaders.begin();
 
@@ -506,6 +509,9 @@ struct GLfunctions {
     noiseTexID = CreateTexture(e_InternalPixelFormat_RGB8, e_PixelFormat_RGB, noise->w, noise->h, false, true, false, false, false);
     UpdateTexture(noiseTexID, noise, false, false);
     SDL_FreeSurface(noise);
+
+    // create buffers for overlay and simple quad rendering to use shaders instead of fixed pipeline
+    InitializeOverlayAndQuadBuffers();
 
     mapping.glClearColor(0, 0, 0, 0);
     mapping.glClearDepth(1.0);
@@ -764,246 +770,249 @@ struct GLfunctions {
 
   void OpenGLRenderer3D::SetTextureMode(e_TextureMode textureMode) {
     // todo: err its not a mode i guess
-    switch (textureMode) {
+    // Never called. Uses deprecated methods
+    /*
+      switch (textureMode) {
 
-      case e_TextureMode_Off:     mapping.glDisable(GL_TEXTURE_2D);
-                                  break;
+        case e_TextureMode_Off:     mapping.glDisable(GL_TEXTURE_2D);
+                                    break;
 
-      case e_TextureMode_2D:      mapping.glEnable(GL_TEXTURE_2D);
-                                  break;
-    }
-  }
-
-  void OpenGLRenderer3D::SetColor(const Vector3 &color, float alpha) {
-    mapping.glColor4f(color.coords[0], color.coords[1], color.coords[2], alpha);
-  }
-
-  void OpenGLRenderer3D::SetColorMask(bool r, bool g, bool b, bool alpha) {
-    mapping.glColorMask(r, g, b, alpha);
-  }
-
-  void OpenGLRenderer3D::ClearBuffer(const Vector3 &color, bool clearDepth, bool clearColor) {
-//xx    glClearColor(color.coords[0], color.coords[1], color.coords[2], 0.0);
-    //REDUNDANT? deprecated?
-//xx    glClearDepth(1.0f);
-    //glClear((GL_COLOR_BUFFER_BIT && clearColor) | (GL_DEPTH_BUFFER_BIT && clearDepth));
-    GLbitfield mask = 0;
-    if (clearDepth) mask |= GL_DEPTH_BUFFER_BIT;
-    if (clearColor) mask |= GL_COLOR_BUFFER_BIT;
-    mapping.glClear(mask);
-  }
-
-  Matrix4 OpenGLRenderer3D::CreatePerspectiveMatrix(float aspectRatio, float nearCap, float farCap) {
-    //XX deprecated glMatrixMode(GL_PROJECTION);
-    //XX deprecated glLoadIdentity();
-    float Xnear = nearCap;
-    if (Xnear == -1) Xnear = cameraNear;
-    float Xfar = farCap;
-    if (Xfar == -1) Xfar = cameraFar;
-    //XX deprecated gluPerspective(FOV, aspectRatio, Xnear, Xfar);
-
-    Matrix4 projectionMatrix;
-    projectionMatrix.ConstructProjection(FOV, aspectRatio, Xnear, Xfar);
-
-    return projectionMatrix;
-  }
-
-  Matrix4 OpenGLRenderer3D::CreateOrthoMatrix(float left, float right, float bottom, float top, float nearCap, float farCap) {
-    //XX deprecated glMatrixMode(GL_PROJECTION);
-    //XX deprecated glLoadIdentity();
-    float Xnear = nearCap;
-    if (Xnear == -1) Xnear = cameraNear;
-    float Xfar = farCap;
-    if (Xfar == -1) Xfar = cameraFar;
-    //XX deprecated glOrtho(left, right, bottom, top, Xnear, Xfar);
-
-    Matrix4 orthoMatrix;
-    orthoMatrix.ConstructOrtho(left, right, bottom, top, Xnear, Xfar);
-
-    return orthoMatrix;
-  }
-
-
-  // vertex buffers
-
-  GLenum GetGLVertexBufferUsage(e_VertexBufferUsage usage) {
-
-    GLenum GLfunc = GL_STREAM_DRAW;
-
-    switch (usage) {
-
-      case e_VertexBufferUsage_StreamDraw: GLfunc = GL_STREAM_DRAW;
-                                           break;
-
-      case e_VertexBufferUsage_StreamRead: GLfunc = GL_STREAM_READ;
-                                           break;
-
-      case e_VertexBufferUsage_StreamCopy: GLfunc = GL_STREAM_COPY;
-                                           break;
-
-      case e_VertexBufferUsage_StaticDraw: GLfunc = GL_STATIC_DRAW;
-                                           break;
-
-      case e_VertexBufferUsage_StaticRead: GLfunc = GL_STATIC_READ;
-                                           break;
-
-      case e_VertexBufferUsage_StaticCopy: GLfunc = GL_STATIC_COPY;
-                                           break;
-
-      case e_VertexBufferUsage_DynamicDraw: GLfunc = GL_DYNAMIC_DRAW;
-                                            break;
-
-      case e_VertexBufferUsage_DynamicRead: GLfunc = GL_DYNAMIC_READ;
-                                            break;
-
-      case e_VertexBufferUsage_DynamicCopy: GLfunc = GL_DYNAMIC_COPY;
-                                            break;
-
+        case e_TextureMode_2D:      mapping.glEnable(GL_TEXTURE_2D);
+                                    break;
+      }
+     */
     }
 
-    return GLfunc;
-  }
+    void OpenGLRenderer3D::SetColor(const Vector3 &color, float alpha) {
+      mapping.glColor4f(color.coords[0], color.coords[1], color.coords[2], alpha);
+    }
 
-  VertexBufferID OpenGLRenderer3D::CreateVertexBuffer(float *vertices, unsigned int verticesDataSize, std::vector<unsigned int> indices, e_VertexBufferUsage usage) {
+    void OpenGLRenderer3D::SetColorMask(bool r, bool g, bool b, bool alpha) {
+      mapping.glColorMask(r, g, b, alpha);
+    }
 
-    GLuint iid; // element indices
-    unsigned int vertexArrayID;
+    void OpenGLRenderer3D::ClearBuffer(const Vector3 &color, bool clearDepth, bool clearColor) {
+  //xx    glClearColor(color.coords[0], color.coords[1], color.coords[2], 0.0);
+      //REDUNDANT? deprecated?
+  //xx    glClearDepth(1.0f);
+      //glClear((GL_COLOR_BUFFER_BIT && clearColor) | (GL_DEPTH_BUFFER_BIT && clearDepth));
+      GLbitfield mask = 0;
+      if (clearDepth) mask |= GL_DEPTH_BUFFER_BIT;
+      if (clearColor) mask |= GL_COLOR_BUFFER_BIT;
+      mapping.glClear(mask);
+    }
 
-    bool pingPong = false;
-    if (usage == e_VertexBufferUsage_DynamicDraw || usage == e_VertexBufferUsage_DynamicRead || usage == e_VertexBufferUsage_DynamicCopy ||
-        usage == e_VertexBufferUsage_StreamDraw || usage == e_VertexBufferUsage_StreamRead || usage == e_VertexBufferUsage_StreamCopy) pingPong = true;
-    pingPong = false; // use orphaning instead
-    int number = 1;
-    if (pingPong) number = 2;
+    Matrix4 OpenGLRenderer3D::CreatePerspectiveMatrix(float aspectRatio, float nearCap, float farCap) {
+      //XX deprecated glMatrixMode(GL_PROJECTION);
+      //XX deprecated glLoadIdentity();
+      float Xnear = nearCap;
+      if (Xnear == -1) Xnear = cameraNear;
+      float Xfar = farCap;
+      if (Xfar == -1) Xfar = cameraFar;
+      //XX deprecated gluPerspective(FOV, aspectRatio, Xnear, Xfar);
 
-    int firstBuffer_id = 0;
-    int firstArray_id = 0;
+      Matrix4 projectionMatrix;
+      projectionMatrix.ConstructProjection(FOV, aspectRatio, Xnear, Xfar);
 
-    for (int b = 0; b < number; b++) {
-      GLuint vid;
-      mapping.glGenVertexArrays(1, &vid);
-      mapping.glBindVertexArray(vid);
-      vertexArrayID = vid;
-      if (b == 0) firstArray_id = vertexArrayID;
+      return projectionMatrix;
+    }
+
+    Matrix4 OpenGLRenderer3D::CreateOrthoMatrix(float left, float right, float bottom, float top, float nearCap, float farCap) {
+      //XX deprecated glMatrixMode(GL_PROJECTION);
+      //XX deprecated glLoadIdentity();
+      float Xnear = nearCap;
+      if (Xnear == -1) Xnear = cameraNear;
+      float Xfar = farCap;
+      if (Xfar == -1) Xfar = cameraFar;
+      //XX deprecated glOrtho(left, right, bottom, top, Xnear, Xfar);
+
+      Matrix4 orthoMatrix;
+      orthoMatrix.ConstructOrtho(left, right, bottom, top, Xnear, Xfar);
+
+      return orthoMatrix;
+    }
 
 
-      GLuint bid;
-      mapping.glGenBuffers(1, &bid);
-      int buffer_id = bid;
-      if (b == 0) firstBuffer_id = buffer_id;
-      //printf("array size: %i\n", triangleCount * 3 * 3);
-      mapping.glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
-      mapping.glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GetGLVertexBufferUsage(usage));
-      mapping.glBufferSubData(GL_ARRAY_BUFFER, 0, verticesDataSize * sizeof(float), vertices);
+    // vertex buffers
+
+    GLenum GetGLVertexBufferUsage(e_VertexBufferUsage usage) {
+
+      GLenum GLfunc = GL_STREAM_DRAW;
+
+      switch (usage) {
+
+        case e_VertexBufferUsage_StreamDraw: GLfunc = GL_STREAM_DRAW;
+                                             break;
+
+        case e_VertexBufferUsage_StreamRead: GLfunc = GL_STREAM_READ;
+                                             break;
+
+        case e_VertexBufferUsage_StreamCopy: GLfunc = GL_STREAM_COPY;
+                                             break;
+
+        case e_VertexBufferUsage_StaticDraw: GLfunc = GL_STATIC_DRAW;
+                                             break;
+
+        case e_VertexBufferUsage_StaticRead: GLfunc = GL_STATIC_READ;
+                                             break;
+
+        case e_VertexBufferUsage_StaticCopy: GLfunc = GL_STATIC_COPY;
+                                             break;
+
+        case e_VertexBufferUsage_DynamicDraw: GLfunc = GL_DYNAMIC_DRAW;
+                                              break;
+
+        case e_VertexBufferUsage_DynamicRead: GLfunc = GL_DYNAMIC_READ;
+                                              break;
+
+        case e_VertexBufferUsage_DynamicCopy: GLfunc = GL_DYNAMIC_COPY;
+                                              break;
+
+      }
+
+      return GLfunc;
+    }
+
+    VertexBufferID OpenGLRenderer3D::CreateVertexBuffer(float *vertices, unsigned int verticesDataSize, std::vector<unsigned int> indices, e_VertexBufferUsage usage) {
+
+      GLuint iid; // element indices
+      unsigned int vertexArrayID;
+
+      bool pingPong = false;
+      if (usage == e_VertexBufferUsage_DynamicDraw || usage == e_VertexBufferUsage_DynamicRead || usage == e_VertexBufferUsage_DynamicCopy ||
+          usage == e_VertexBufferUsage_StreamDraw || usage == e_VertexBufferUsage_StreamRead || usage == e_VertexBufferUsage_StreamCopy) pingPong = true;
+      pingPong = false; // use orphaning instead
+      int number = 1;
+      if (pingPong) number = 2;
+
+      int firstBuffer_id = 0;
+      int firstArray_id = 0;
+
+      for (int b = 0; b < number; b++) {
+        GLuint vid;
+        mapping.glGenVertexArrays(1, &vid);
+        mapping.glBindVertexArray(vid);
+        vertexArrayID = vid;
+        if (b == 0) firstArray_id = vertexArrayID;
 
 
-      // generate a buffer for the indices
+        GLuint bid;
+        mapping.glGenBuffers(1, &bid);
+        int buffer_id = bid;
+        if (b == 0) firstBuffer_id = buffer_id;
+        //printf("array size: %i\n", triangleCount * 3 * 3);
+        mapping.glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
+        mapping.glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GetGLVertexBufferUsage(usage));
+        mapping.glBufferSubData(GL_ARRAY_BUFFER, 0, verticesDataSize * sizeof(float), vertices);
 
-      if (indices.size() == 0) {
-        for (unsigned int i = 0; i < verticesDataSize / GetTriangleMeshElementCount() / 3; i++) {
-          indices.push_back(i);
+
+        // generate a buffer for the indices
+
+        if (indices.size() == 0) {
+          for (unsigned int i = 0; i < verticesDataSize / GetTriangleMeshElementCount() / 3; i++) {
+            indices.push_back(i);
+          }
+        }
+        mapping.glGenBuffers(1, &iid);
+        mapping.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iid);
+        mapping.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), NULL, GetGLVertexBufferUsage(usage));
+        mapping.glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(unsigned int), &indices[0]);
+
+
+        #define BUFFER_OFFSET( i ) ((char *)NULL + (i))
+        for (int i = 0; i < GetTriangleMeshElementCount(); i++) {
+          mapping.glVertexAttribPointer((GLuint)i, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(verticesDataSize / GetTriangleMeshElementCount() * i * sizeof(float)));
+          mapping.glEnableVertexAttribArray(i);
+        }
+
+        if (b == 1) {
+          VAOReadIndex.insert(std::pair<int, int>(firstArray_id, 0));
+          VBOPingPongMap.insert(std::pair<int, int>(firstBuffer_id, buffer_id));
+          VAOPingPongMap.insert(std::pair<int, int>(firstArray_id, vertexArrayID));
         }
       }
-      mapping.glGenBuffers(1, &iid);
-      mapping.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iid);
-      mapping.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), NULL, GetGLVertexBufferUsage(usage));
-      mapping.glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.size() * sizeof(unsigned int), &indices[0]);
 
+      mapping.glBindVertexArray(0);
 
-      #define BUFFER_OFFSET( i ) ((char *)NULL + (i))
-      for (int i = 0; i < GetTriangleMeshElementCount(); i++) {
-        mapping.glVertexAttribPointer((GLuint)i, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(verticesDataSize / GetTriangleMeshElementCount() * i * sizeof(float)));
-        mapping.glEnableVertexAttribArray(i);
-      }
+      mapping.glBindBuffer(GL_ARRAY_BUFFER, 0);
+      mapping.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-      if (b == 1) {
-        VAOReadIndex.insert(std::pair<int, int>(firstArray_id, 0));
-        VBOPingPongMap.insert(std::pair<int, int>(firstBuffer_id, buffer_id));
-        VAOPingPongMap.insert(std::pair<int, int>(firstArray_id, vertexArrayID));
-      }
+      VertexBufferID vertexBufferID;
+      vertexBufferID.bufferID = firstBuffer_id;
+      vertexBufferID.vertexArrayID = firstArray_id;
+      vertexBufferID.elementArrayID = iid;
+
+      //vertexArrayID = firstArray_id;
+      return vertexBufferID;
     }
 
-    mapping.glBindVertexArray(0);
+    void OpenGLRenderer3D::UpdateVertexBuffer(VertexBufferID vertexBufferID, float *vertices, unsigned int verticesDataSize) {
+      int writeVertexBufferID = vertexBufferID.bufferID;
+      int writeVertexArrayID = vertexBufferID.vertexArrayID;
 
-    mapping.glBindBuffer(GL_ARRAY_BUFFER, 0);
-    mapping.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      int pingPongReadSwitch = 0;
+      //bool pingPong = false;
+      std::map<int, int>::iterator pingPongIter = VAOReadIndex.find(vertexBufferID.vertexArrayID);
+      if (pingPongIter != VAOReadIndex.end()) {
+        pingPongReadSwitch = pingPongIter->second;
+        //pingPong = true;
 
-    VertexBufferID vertexBufferID;
-    vertexBufferID.bufferID = firstBuffer_id;
-    vertexBufferID.vertexArrayID = firstArray_id;
-    vertexBufferID.elementArrayID = iid;
-
-    //vertexArrayID = firstArray_id;
-    return vertexBufferID;
-  }
-
-  void OpenGLRenderer3D::UpdateVertexBuffer(VertexBufferID vertexBufferID, float *vertices, unsigned int verticesDataSize) {
-    int writeVertexBufferID = vertexBufferID.bufferID;
-    int writeVertexArrayID = vertexBufferID.vertexArrayID;
-
-    int pingPongReadSwitch = 0;
-    //bool pingPong = false;
-    std::map<int, int>::iterator pingPongIter = VAOReadIndex.find(vertexBufferID.vertexArrayID);
-    if (pingPongIter != VAOReadIndex.end()) {
-      pingPongReadSwitch = pingPongIter->second;
-      //pingPong = true;
-
-      pingPongIter->second++;
-      if (pingPongIter->second == 2) pingPongIter->second = 0;
-    }
-
-    if (pingPongReadSwitch == 0) {
-      pingPongIter = VBOPingPongMap.find(vertexBufferID.bufferID);
-      if (pingPongIter != VBOPingPongMap.end()) {
-        writeVertexBufferID = pingPongIter->second;
+        pingPongIter->second++;
+        if (pingPongIter->second == 2) pingPongIter->second = 0;
       }
 
-      pingPongIter = VAOPingPongMap.find(vertexBufferID.vertexArrayID);
-      if (pingPongIter != VAOPingPongMap.end()) {
-        writeVertexArrayID = pingPongIter->second;
+      if (pingPongReadSwitch == 0) {
+        pingPongIter = VBOPingPongMap.find(vertexBufferID.bufferID);
+        if (pingPongIter != VBOPingPongMap.end()) {
+          writeVertexBufferID = pingPongIter->second;
+        }
+
+        pingPongIter = VAOPingPongMap.find(vertexBufferID.vertexArrayID);
+        if (pingPongIter != VAOPingPongMap.end()) {
+          writeVertexArrayID = pingPongIter->second;
+        }
+
       }
 
-    }
+      mapping.glBindVertexArray((GLuint)writeVertexArrayID);
+      mapping.glBindBuffer(GL_ARRAY_BUFFER, writeVertexBufferID); // todo: why is this necessary? shouldn't this be part of the vao?
 
-    mapping.glBindVertexArray((GLuint)writeVertexArrayID);
-    mapping.glBindBuffer(GL_ARRAY_BUFFER, writeVertexBufferID); // todo: why is this necessary? shouldn't this be part of the vao?
+      //glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), vertices, GL_DYNAMIC_DRAW);
 
-    //glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), vertices, GL_DYNAMIC_DRAW);
+  //    glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GL_DYNAMIC_DRAW);
 
-//    glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GL_DYNAMIC_DRAW);
+  //    if (!pingPong) {
+        // i don't think we can use glMapBufferRange with GL_MAP_UNSYNCHRONIZED_BIT in a non-pingponged situation, but may want to test this sometimes
+  //      glBufferSubData(GL_ARRAY_BUFFER, 0, verticesDataSize * sizeof(float), vertices);
+  //    } else {
+        //glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GL_STREAM_DRAW);
+        //float *ptr = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
-//    if (!pingPong) {
-      // i don't think we can use glMapBufferRange with GL_MAP_UNSYNCHRONIZED_BIT in a non-pingponged situation, but may want to test this sometimes
-//      glBufferSubData(GL_ARRAY_BUFFER, 0, verticesDataSize * sizeof(float), vertices);
-//    } else {
-      //glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GL_STREAM_DRAW);
-      //float *ptr = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        // the next 2 statements, as well as the invalidate_bit stuff in the 3rd statement, should do the same thing: orphaning the vertexbuffer.
+        // however, on my current AMD (HD 6850), only the first seems to actually work! is this an AMD driver bug? can't find anything about it on the interwebz..
 
-      // the next 2 statements, as well as the invalidate_bit stuff in the 3rd statement, should do the same thing: orphaning the vertexbuffer.
-      // however, on my current AMD (HD 6850), only the first seems to actually work! is this an AMD driver bug? can't find anything about it on the interwebz..
+        mapping.glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GL_DYNAMIC_DRAW);
+        //glInvalidateBufferData(vertexBufferID.bufferID);
+        float *ptr = (float*)mapping.glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesDataSize * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT); // GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_INVALIDATE_RANGE_BIT |
+        memcpy(ptr, vertices, verticesDataSize * sizeof(float));
+        mapping.glUnmapBuffer(GL_ARRAY_BUFFER);
 
-      mapping.glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-      //glInvalidateBufferData(vertexBufferID.bufferID);
-      float *ptr = (float*)mapping.glMapBufferRange(GL_ARRAY_BUFFER, 0, verticesDataSize * sizeof(float), GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT); // GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_INVALIDATE_RANGE_BIT |
-      memcpy(ptr, vertices, verticesDataSize * sizeof(float));
-      mapping.glUnmapBuffer(GL_ARRAY_BUFFER);
+  //      glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), vertices, GL_DYNAMIC_DRAW);
 
-//      glBufferData(GL_ARRAY_BUFFER, verticesDataSize * sizeof(float), vertices, GL_DYNAMIC_DRAW);
+  //    }
 
-//    }
-
-    // this fence doesn't seem necessary. the frame swap will glflush things anyway, so as long as you don't update the mesh and render stuff in the same frame, you should be okay.
-    // ^ investigate if this is correct thinking. not sure. hairstyles seem to be late, so there is something wrong with omitting the fence.
-    // if it's true, users of the engine will need to make sure to not update and render in parallel. maybe make this an option? maybe put something about it in a future manual?
-    //GLsync syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-/*fenceoff
-    // delete possible previous sync object
-    std::map<int, GLsync>::iterator syncIter = VAOfence.find(writeVertexArrayID);
-    if (syncIter != VAOfence.end()) {
-      glDeleteSync(syncIter->second);
-      VAOfence.erase(syncIter);
-    }
-*/
+      // this fence doesn't seem necessary. the frame swap will glflush things anyway, so as long as you don't update the mesh and render stuff in the same frame, you should be okay.
+      // ^ investigate if this is correct thinking. not sure. hairstyles seem to be late, so there is something wrong with omitting the fence.
+      // if it's true, users of the engine will need to make sure to not update and render in parallel. maybe make this an option? maybe put something about it in a future manual?
+      //GLsync syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+  /*fenceoff
+      // delete possible previous sync object
+      std::map<int, GLsync>::iterator syncIter = VAOfence.find(writeVertexArrayID);
+      if (syncIter != VAOfence.end()) {
+        glDeleteSync(syncIter->second);
+        VAOfence.erase(syncIter);
+      }
+  */
     //VAOfence.insert(std::pair<int, GLsync>(writeVertexArrayID, syncObj));
 
     mapping.glBindVertexArray(0);
@@ -1071,16 +1080,13 @@ struct GLfunctions {
 
     VertexBuffer *vertexBuffer;
 
-    if (renderMode != e_RenderMode_GeometryOnly) {
-      mapping.glEnable(GL_TEXTURE_2D);
-    } else {
-      mapping.glDisable(GL_TEXTURE_2D);
-    }
-    // if (renderMode == e_RenderMode_GeometryOnly || renderMode == e_RenderMode_Diffuse) {
-    //   glDisable(GL_LIGHTING);
-    // } else {
-    //   glEnable(GL_LIGHTING);
-    // }
+// Deprecated
+//  if (renderMode != e_RenderMode_GeometryOnly) {
+//    DO_VALIDATION;
+//    mapping.glEnable(GL_TEXTURE_2D);
+//  } else {
+//    mapping.glDisable(GL_TEXTURE_2D);
+//  }
 
     signed int currentDiffuseTextureID = -1;
     signed int currentNormalTextureID = -1;
@@ -1295,7 +1301,6 @@ struct GLfunctions {
       }
       SetTextureUnit(0);
       mapping.glBindTexture(GL_TEXTURE_2D, 0);
-      mapping.glDisable(GL_TEXTURE_2D);
     }
 
     mapping.glBindVertexArray(0);
@@ -1448,7 +1453,10 @@ struct GLfunctions {
       case e_PixelFormat_RGB:            format = GL_RGB; break;
       case e_PixelFormat_RGBA:           format = GL_RGBA; break; // todo: BGRA preferred on windows?
       case e_PixelFormat_DepthComponent: format = GL_DEPTH_COMPONENT; break;
-      case e_PixelFormat_Luminance:      format = GL_LUMINANCE; break;
+      case e_PixelFormat_Luminance:
+        Log(e_Error, "OpenGLRenderer3D", "GetGLPixelFormat",
+            "e_PixelFormat_Luminance not supported");
+        break;
     }
 
     return format;
@@ -1525,7 +1533,7 @@ struct GLfunctions {
     }
 
     if (filter) {
-      mapping.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, largest_supported_anisotropy);
+      SetMaxAnisotropy();
     }
 
     if (!multisample) {
@@ -1558,7 +1566,7 @@ struct GLfunctions {
       filter_min = (mipmaps) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
       filter_mag = GL_LINEAR;
       //glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &largest_supported_anisotropy);
-      mapping.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, largest_supported_anisotropy);
+      SetMaxAnisotropy();
     } else {
       filter_min = (mipmaps) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
       filter_mag = GL_NEAREST;
@@ -1573,7 +1581,9 @@ struct GLfunctions {
         internalPixelFormat == e_InternalPixelFormat_DepthComponent32 ||
         internalPixelFormat == e_InternalPixelFormat_DepthComponent32F) {
       mapping.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-      mapping.glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+      // Post-GLSL 1.3, DEPTH_TEXTURE_MODE is deprecated and GLSL behaves as if
+      // its always set to LUMINANCE
+      //mapping.glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
     }
 
     if (mipmaps) {
@@ -1608,6 +1618,14 @@ struct GLfunctions {
     int w = source->w;
     int h = source->h;
 
+  SDL_LockSurface(source);
+  mapping.glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, type2, GL_UNSIGNED_BYTE,
+          source->pixels);
+  SDL_UnlockSurface(source);
+
+  if (mipmaps) {
+    mapping.glGenerateMipmap(GL_TEXTURE_2D);
+  }
     GLint filter_min, filter_mag;
 
     bool filter = true;
@@ -1616,7 +1634,7 @@ struct GLfunctions {
       filter_min = (mipmaps) ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
       filter_mag = GL_LINEAR;
       //glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &largest_supported_anisotropy);
-      mapping.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, largest_supported_anisotropy);
+      SetMaxAnisotropy();
     } else {
       filter_min = (mipmaps) ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
       filter_mag = GL_NEAREST;
@@ -1624,14 +1642,6 @@ struct GLfunctions {
 
     mapping.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_min);
     mapping.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mag);
-
-    if (mipmaps) {
-      mapping.glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-    }
-    SDL_LockSurface(source);
-    mapping.glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, type2, GL_UNSIGNED_BYTE, source->pixels);
-
-    SDL_UnlockSurface(source);
 
     BindTexture(0);
   }
@@ -1664,7 +1674,12 @@ struct GLfunctions {
     mapping.glClientActiveTexture(GL_TEXTURE0 + (GLuint)textureUnit);
   }
 
-
+  void OpenGLRenderer3D::SetMaxAnisotropy() {
+//#ifndef __gl_glcorearb_h_  // Can be used to check for Core Profile Mode on Linux
+    mapping.glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                            largest_supported_anisotropy);
+//#endif
+  }
   // frame buffer objects
 
   GLenum GetGLTargetAttachment(e_TargetAttachment targetAttachment) {
@@ -1995,6 +2010,10 @@ struct GLfunctions {
       mapping.glBindAttribLocation(shader.programID, 0, "position");
       mapping.glBindFragDataLocation(shader.programID, 0, "stdout");
     }
+  if (name == "overlay") {
+    mapping.glBindAttribLocation(shader.programID, 0, "vertex");
+    mapping.glBindFragDataLocation(shader.programID, 0, "stdout");
+  }
 
     mapping.glLinkProgram(shader.programID);
 

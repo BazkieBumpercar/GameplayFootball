@@ -146,6 +146,7 @@ namespace blunted {
       float overallBrightness;
 
       float largest_supported_anisotropy;
+      void SetMaxAnisotropy();
 
       std::map<std::string, int> uniformCache;
 
@@ -156,6 +157,12 @@ namespace blunted {
 
       signed int _cache_activeTextureUnit;
 
+      // members and functions for rendering overlay with shaders instead of deprecated methods
+      VertexBufferID overlayBuffer;  // buffer for drawing textures such as player's names and game score
+      VertexBufferID quadBuffer;     // buffer for drawing simple quads
+      VertexBufferID CreateSimpleVertexBuffer(float *vertices, unsigned int size);
+      void DeleteSimpleVertexBuffer(VertexBufferID vertexBufferID);
+      void InitializeOverlayAndQuadBuffers();
   };
 
 #ifdef WIN32
