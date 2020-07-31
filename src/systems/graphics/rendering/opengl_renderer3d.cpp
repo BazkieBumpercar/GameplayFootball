@@ -17,8 +17,14 @@
 
 #include "opengl_renderer3d.hpp"
 
+#ifdef __APPLE__
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
+#else
 #include <GL/gl.h>
 //#include <GL/glcorearb.h>  // can be used to check for core profile only
+#endif
 
 #include <cmath>
 #include <SDL2/SDL.h>
@@ -1307,7 +1313,7 @@ struct GLfunctions {
   }
 
   void OpenGLRenderer3D::RenderAABB(std::list<VertexBufferQueueEntry> &vertexBufferQueue) {
-
+    /* VK: Not used. Delete it
     mapping.glDisable(GL_LIGHTING);
     mapping.glPolygonMode(GL_FRONT, GL_FILL);
     mapping.glColor3f(0, 1, 0);
@@ -1360,11 +1366,11 @@ struct GLfunctions {
     }
 
     mapping.glEnd();
-
+    */
   }
 
   void OpenGLRenderer3D::RenderAABB(std::list<LightQueueEntry> &lightQueue) {
-
+    /* VK: Not used. Delete it
     mapping.glDisable(GL_LIGHTING);
     mapping.glPolygonMode(GL_FRONT, GL_FILL);
     mapping.glColor3f(0, 0, 1);
@@ -1417,13 +1423,14 @@ struct GLfunctions {
     }
 
     mapping.glEnd();
+     */
   }
 
 
   // lights
 
   void OpenGLRenderer3D::SetLight(const Vector3 &position, const Vector3 &color, float radius) {
-
+    /* VK: Not used. Delete it
     Vector3 pos = position;
 
     //printf("%f %f %f\n", cameraPos.coords[0], cameraPos.coords[1], cameraPos.coords[2]);
@@ -1439,6 +1446,7 @@ struct GLfunctions {
     mapping.glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
     mapping.glEnable(GL_LIGHT0);
+    */
   }
 
 
@@ -1556,6 +1564,18 @@ struct GLfunctions {
   void OpenGLRenderer3D::ResizeTexture(int textureID, SDL_Surface *source, e_InternalPixelFormat internalPixelFormat, e_PixelFormat pixelFormat, bool alpha, bool mipmaps) {
 
     BindTexture(textureID);
+    int x = 0;
+    int y = 0;
+    int width = source->w;
+    int height = source->h;
+
+    SDL_LockSurface(source);
+    mapping.glTexImage2D(GL_TEXTURE_2D, 0, GetGLInternalPixelFormat(internalPixelFormat), width, height, 0, GetGLPixelFormat(pixelFormat), GL_UNSIGNED_BYTE, source->pixels);
+    SDL_UnlockSurface(source);
+
+    if (mipmaps) {
+      mapping.glGenerateMipmap(GL_TEXTURE_2D);
+    }
 
     bool repeat = false;
     bool filter = true;
@@ -1586,18 +1606,6 @@ struct GLfunctions {
       //mapping.glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
     }
 
-    if (mipmaps) {
-      mapping.glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-    }
-
-    int x = 0;
-    int y = 0;
-    int width = source->w;
-    int height = source->h;
-
-    SDL_LockSurface(source);
-    mapping.glTexImage2D(GL_TEXTURE_2D, 0, GetGLInternalPixelFormat(internalPixelFormat), width, height, 0, GetGLPixelFormat(pixelFormat), GL_UNSIGNED_BYTE, source->pixels);
-    SDL_UnlockSurface(source);
 
     //GLclampf prior = (width * height) / 1048576.0; // 1024*1024 tex = max priority
     //printf("%f\n", (pot(source->w) * pot(source->h)) / 1048576.0);
