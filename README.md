@@ -76,11 +76,11 @@ Download and install:
 - [Git](https://git-scm.com/download/win),
 - [CMake](https://cmake.org/download/) (make sure to add it to the system PATH).
 
-Install [`vcpkg`](https://github.com/microsoft/vcpkg) by following their [Quick Start Guide](https://github.com/microsoft/vcpkg#quick-start-windows):
-create a directory, e.g. `C:\dev\vcpkg`, open Command Prompt and run the following commands: 
+Install [`vcpkg`](https://github.com/microsoft/vcpkg) as explained in [Quick Start Guide](https://github.com/microsoft/vcpkg#quick-start-windows) or simply:
+create a directory, e.g. `C:\dev`, open Command Prompt and run the following commands: 
 ```bat
-% Navigate to the directory with vcpkg
-cd C:\dev\vcpkg
+% Navigate to the created directory
+cd C:\dev
 
 % Clone vckpg
 git clone https://github.com/microsoft/vcpkg
