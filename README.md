@@ -1,6 +1,8 @@
 # Gameplay Football
 Football game, discontinued
 
+*update: vi3itor has forked this project: https://github.com/vi3itor/GameplayFootball; "The goal of this repository is to update the existing code, based on Google Brain's changes (see google_brain branch) and other forks, and make it compiling and running on as many platforms as possible. PRs are always welcome."
+
 In short, this game has pretty good potential gameplay-wise, but has architectural problems regarding the code. I would advise you *not* to continue development, but rather use the source as inspiration for your own game. There's some pretty useful excerpts of code in there that may help you develop your sportsball game!
 Another thing, this game uses my own multithreaded game engine (Blunted2), and no matter how cool that may sound, using a badly tested and undocumented engine just slows down development. Besides, a football game doesn't need to be *that* multithreaded, it just needlessly complicates things.
 
